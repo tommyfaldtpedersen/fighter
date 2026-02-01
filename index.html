@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #222;
+            overflow: hidden;
+        }
+
+        canvas {
+            border: 2px solid #fff;
+            background-color: #000;
+            max-width: 100%;
+            max-height: 100vh;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Scale helper - converts relative values to actual pixels
+        const scale = {
+            x: (relativeValue) => canvas.width * relativeValue,
+            y: (relativeValue) => canvas.height * relativeValue,
+            size: (relativeValue) => Math.min(canvas.width, canvas.height) * relativeValue
+        };
+
+        // Example game objects defined in relative coordinates (0-1 range)
+        const gameObjects = {
+            player: {
+                x: 0.1,      // 10% from left
+                y: 0.5,      // 50% from top (middle)
+                width: 0.08,  // 8% of canvas width
+                height: 0.12, // 12% of canvas height
+                color: '#00ff00'
+            },
+            enemy: {
+                x: 0.7,
+                y: 0.3,
+                width: 0.08,
+                height: 0.12,
+                color: '#ff0000'
+            },
+            ground: {
+                x: 0,
+                y: 0.8,      // 80% down from top
+                width: 1,     // Full width
+                height: 0.2,  // 20% of canvas height
+                color: '#8B4513'
+            }
+        };
+
+        // Resize canvas to fit viewport while maintaining aspect ratio
+        function resizeCanvas() {
+            const aspectRatio = 4 / 3; // Change this to your preferred ratio (16/9, 4/3, etc.)
+            const maxWidth = window.innerWidth - 20; // 20px padding
+            const maxHeight = window.innerHeight - 20;
+
+            let width = maxWidth;
+            let height = width / aspectRatio;
+
+            // If height is too large, scale based on height instead
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = height * aspectRatio;
+            }
+
+            // Set canvas resolution (actual pixels)
+            canvas.width = width;
+            canvas.height = height;
+
+            // Redraw your game here after resize
+            draw();
+        }
+
+        // Drawing function
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw game objects using scaled coordinates
+            for (const [name, obj] of Object.entries(gameObjects)) {
+                ctx.fillStyle = obj.color;
+                ctx.fillRect(
+                    scale.x(obj.x),           // Convert relative x to pixels
+                    scale.y(obj.y),           // Convert relative y to pixels
+                    scale.x(obj.width),       // Convert relative width to pixels
+                    scale.y(obj.height)       // Convert relative height to pixels
+                );
+            }
+        }
+
+        // Initial resize
+        resizeCanvas();
+
+        // Resize canvas when window size changes
+        window.addEventListener('resize', resizeCanvas);
+
+        // Example: Update game object position
+        // gameObjects.player.x = 0.5; // Move to center
+        // draw(); // Redraw to see changes
+
+        // Your game loop can go here
+        // function gameLoop() {
+        //     // Update game logic
+        //     // gameObjects.player.x += 0.001;
+        //
+        //     draw();
+        //     requestAnimationFrame(gameLoop);
+        // }
+        // gameLoop();
+    </script>
+</body>
+
+</html>
