@@ -67,8 +67,13 @@
             ArrowUp: false,
             ArrowDown: false,
             ArrowLeft: false,
-            ArrowRight: false
+            ArrowRight: false,
+            ' ': false  // Space key
         };
+
+        // Projectiles array
+        const projectiles = [];
+        let canShoot = true;  // Shooting cooldown flag
 
         // Other game objects
         const gameObjects = {
@@ -127,6 +132,9 @@
                 );
             }
 
+            // Draw projectiles
+            drawProjectiles();
+
             // Draw player spaceship as a triangle
             drawSpaceship();
         }
@@ -164,8 +172,64 @@
             ctx.restore();
         }
 
+        // Draw projectiles
+        function drawProjectiles() {
+            ctx.fillStyle = '#ffff00';
+            projectiles.forEach(proj => {
+                ctx.beginPath();
+                ctx.arc(
+                    scale.x(proj.x),
+                    scale.y(proj.y),
+                    scale.size(0.005),  // Small bullet size
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            });
+        }
+
+        // Shoot projectile
+        function shoot() {
+            if (!canShoot) return;
+
+            const projectileSpeed = 0.008;  // Speed of projectile
+            projectiles.push({
+                x: player.x,
+                y: player.y,
+                velocityX: Math.cos(player.rotation) * projectileSpeed,
+                velocityY: Math.sin(player.rotation) * projectileSpeed,
+                lifetime: 0  // Track how long projectile has existed
+            });
+
+            // Cooldown to prevent holding space from creating too many projectiles
+            canShoot = false;
+            setTimeout(() => canShoot = true, 200);  // 200ms cooldown
+        }
+
+        // Update projectiles
+        function updateProjectiles() {
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const proj = projectiles[i];
+
+                // Update position
+                proj.x += proj.velocityX;
+                proj.y += proj.velocityY;
+                proj.lifetime++;
+
+                // Remove if off screen or too old
+                if (proj.x < 0 || proj.x > 1 || proj.y < 0 || proj.y > 1 || proj.lifetime > 180) {
+                    projectiles.splice(i, 1);
+                }
+            }
+        }
+
         // Update player physics
         function updatePlayer() {
+            // Shooting
+            if (keys[' ']) {
+                shoot();
+            }
+
             // Rotation
             if (keys.ArrowLeft) {
                 player.rotation -= player.rotationSpeed;
@@ -225,6 +289,7 @@
         // Game loop
         function gameLoop() {
             updatePlayer();
+            updateProjectiles();
             draw();
             requestAnimationFrame(gameLoop);
         }
