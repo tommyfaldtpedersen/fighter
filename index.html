@@ -47,15 +47,31 @@
             size: (relativeValue) => Math.min(canvas.width, canvas.height) * relativeValue
         };
 
-        // Example game objects defined in relative coordinates (0-1 range)
+        // Player spaceship with physics
+        const player = {
+            x: 0.5,           // Center position
+            y: 0.5,
+            velocityX: 0,     // Velocity in x direction
+            velocityY: 0,     // Velocity in y direction
+            rotation: 0,      // Angle in radians (0 = pointing right)
+            size: 0.03,       // Size relative to canvas
+            color: '#00ff00',
+            acceleration: 0.0002,  // Acceleration rate
+            rotationSpeed: 0.08,   // Rotation speed
+            friction: 0.98,        // Friction/drag (0.98 = 2% speed loss per frame)
+            brakeForce: 0.95       // Braking strength
+        };
+
+        // Keyboard state
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        // Other game objects
         const gameObjects = {
-            player: {
-                x: 0.1,      // 10% from left
-                y: 0.5,      // 50% from top (middle)
-                width: 0.08,  // 8% of canvas width
-                height: 0.12, // 12% of canvas height
-                color: '#00ff00'
-            },
             enemy: {
                 x: 0.7,
                 y: 0.3,
@@ -100,17 +116,105 @@
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw game objects using scaled coordinates
+            // Draw other game objects
             for (const [name, obj] of Object.entries(gameObjects)) {
                 ctx.fillStyle = obj.color;
                 ctx.fillRect(
-                    scale.x(obj.x),           // Convert relative x to pixels
-                    scale.y(obj.y),           // Convert relative y to pixels
-                    scale.x(obj.width),       // Convert relative width to pixels
-                    scale.y(obj.height)       // Convert relative height to pixels
+                    scale.x(obj.x),
+                    scale.y(obj.y),
+                    scale.x(obj.width),
+                    scale.y(obj.height)
                 );
             }
+
+            // Draw player spaceship as a triangle
+            drawSpaceship();
         }
+
+        // Draw spaceship (triangle pointing in rotation direction)
+        function drawSpaceship() {
+            const x = scale.x(player.x);
+            const y = scale.y(player.y);
+            const size = scale.size(player.size);
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(player.rotation);
+
+            // Draw triangle (spaceship)
+            ctx.fillStyle = player.color;
+            ctx.beginPath();
+            ctx.moveTo(size, 0);           // Front point
+            ctx.lineTo(-size, size);       // Bottom back
+            ctx.lineTo(-size, -size);      // Top back
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw thrust flame when accelerating
+            if (keys.ArrowUp) {
+                ctx.fillStyle = '#ff6600';
+                ctx.beginPath();
+                ctx.moveTo(-size, size * 0.5);
+                ctx.lineTo(-size * 1.5, 0);
+                ctx.lineTo(-size, -size * 0.5);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // Update player physics
+        function updatePlayer() {
+            // Rotation
+            if (keys.ArrowLeft) {
+                player.rotation -= player.rotationSpeed;
+            }
+            if (keys.ArrowRight) {
+                player.rotation += player.rotationSpeed;
+            }
+
+            // Acceleration (forward in pointing direction)
+            if (keys.ArrowUp) {
+                player.velocityX += Math.cos(player.rotation) * player.acceleration;
+                player.velocityY += Math.sin(player.rotation) * player.acceleration;
+            }
+
+            // Braking
+            if (keys.ArrowDown) {
+                player.velocityX *= player.brakeForce;
+                player.velocityY *= player.brakeForce;
+            }
+
+            // Apply friction
+            player.velocityX *= player.friction;
+            player.velocityY *= player.friction;
+
+            // Update position
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            // Wrap around screen edges
+            if (player.x < 0) player.x = 1;
+            if (player.x > 1) player.x = 0;
+            if (player.y < 0) player.y = 1;
+            if (player.y > 1) player.y = 0;
+        }
+
+        // Keyboard event listeners
+        window.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+                e.preventDefault(); // Prevent page scrolling
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+                e.preventDefault();
+            }
+        });
 
         // Initial resize
         resizeCanvas();
@@ -118,19 +222,15 @@
         // Resize canvas when window size changes
         window.addEventListener('resize', resizeCanvas);
 
-        // Example: Update game object position
-        // gameObjects.player.x = 0.5; // Move to center
-        // draw(); // Redraw to see changes
+        // Game loop
+        function gameLoop() {
+            updatePlayer();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
 
-        // Your game loop can go here
-        // function gameLoop() {
-        //     // Update game logic
-        //     // gameObjects.player.x += 0.001;
-        //
-        //     draw();
-        //     requestAnimationFrame(gameLoop);
-        // }
-        // gameLoop();
+        // Start game loop
+        gameLoop();
     </script>
 </body>
 
