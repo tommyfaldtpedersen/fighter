@@ -98,6 +98,7 @@
         // Game state
         let gameOver = false;
         let lives = 3;
+        let score = 0;
         let invincible = false;  // Temporary invincibility after being hit
         let invincibleTimer = 0;
 
@@ -166,6 +167,9 @@
 
             // Draw lives indicator
             drawLives();
+
+            // Draw score
+            drawScore();
 
             // Draw player spaceship as a triangle
             if (!gameOver) {
@@ -240,6 +244,14 @@
 
                 ctx.restore();
             }
+        }
+
+        // Draw score in upper right corner
+        function drawScore() {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = scale.size(0.04) + 'px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText('Score: ' + score, canvas.width - scale.size(0.03), scale.size(0.04));
         }
 
         // Draw asteroids
@@ -346,6 +358,15 @@
                     if (distance < asteroid.size) {
                         hitAsteroid = true;
 
+                        // Award points based on asteroid size
+                        if (asteroid.size >= 0.06) {
+                            score += 100;  // Large asteroid
+                        } else if (asteroid.size >= 0.03) {
+                            score += 50;   // Medium asteroid
+                        } else {
+                            score += 25;   // Small asteroid
+                        }
+
                         // Split asteroid if it's large enough
                         if (asteroid.size > 0.02) {
                             const newSize = asteroid.size / 2;
@@ -436,6 +457,7 @@
             player.rotation = 0;
             gameOver = false;
             lives = 3;
+            score = 0;
             invincible = false;
             invincibleTimer = 0;
             projectiles.length = 0;
@@ -474,6 +496,10 @@
                 }
             }
 
+            // Shooting
+            if (keys[' ']) {
+                shoot();
+            }
 
             // Rotation
             if (keys.ArrowLeft) {
@@ -516,6 +542,11 @@
                 keys[e.key] = true;
                 e.preventDefault(); // Prevent page scrolling
             }
+            // Handle space key specifically
+            if (e.key === ' ' || e.code === 'Space') {
+                keys[' '] = true;
+                e.preventDefault();
+            }
             // Restart game with R key
             if (e.key === 'r' || e.key === 'R') {
                 if (gameOver) resetGame();
@@ -525,6 +556,11 @@
         window.addEventListener('keyup', (e) => {
             if (e.key in keys) {
                 keys[e.key] = false;
+                e.preventDefault();
+            }
+            // Handle space key specifically
+            if (e.key === ' ' || e.code === 'Space') {
+                keys[' '] = false;
                 e.preventDefault();
             }
         });
