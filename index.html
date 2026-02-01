@@ -492,16 +492,15 @@
         function updateMEV() {
             if (!mev) return;
 
-            // Move MEV in a circular/wandering pattern (slower)
-            mev.angle += 0.01;  // Half speed
-            const targetX = 0.5 + Math.cos(mev.angle) * 0.3;
-            const targetY = 0.3 + Math.sin(mev.angle * 1.5) * 0.2;
+            // Move MEV like an asteroid (straight line)
+            mev.x += mev.velocityX;
+            mev.y += mev.velocityY;
 
-            // Smooth movement towards target (slower)
-            const dx = targetX - mev.x;
-            const dy = targetY - mev.y;
-            mev.x += dx * 0.01;  // Half speed
-            mev.y += dy * 0.01;  // Half speed
+            // Wrap around screen edges
+            if (mev.x < -mev.size) mev.x = 1 + mev.size;
+            if (mev.x > 1 + mev.size) mev.x = -mev.size;
+            if (mev.y < -mev.size) mev.y = 1 + mev.size;
+            if (mev.y > 1 + mev.size) mev.y = -mev.size;
 
             // Rotate to face player
             const angleToPlayer = Math.atan2(player.y - mev.y, player.x - mev.x);
@@ -598,12 +597,15 @@
 
             // Spawn MEV enemy every 3 levels
             if (level % 3 === 0) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 0.0003 + (Math.random() * 0.0001);
                 mev = {
                     x: 0.5,
                     y: 0.1,
+                    velocityX: Math.cos(angle) * speed,
+                    velocityY: Math.sin(angle) * speed,
                     rotation: 0,
                     size: 0.04,
-                    angle: 0,
                     health: 5  // Takes 5 hits to destroy
                 };
                 mevShootCooldown = 60;
