@@ -103,6 +103,11 @@
         let invincible = false;  // Temporary invincibility after being hit
         let invincibleTimer = 0;
 
+        // MEV enemy
+        let mev = null;  // Will be spawned every 3 levels
+        const mevProjectiles = [];
+        let mevShootCooldown = 0;
+
         // Other game objects
         const gameObjects = {
             enemy: {
@@ -162,6 +167,12 @@
 
             // Draw asteroids
             drawAsteroids();
+
+            // Draw MEV enemy and its projectiles
+            if (mev) {
+                drawMEV();
+                drawMEVProjectiles();
+            }
 
             // Draw projectiles
             drawProjectiles();
@@ -284,6 +295,57 @@
                 ctx.strokeStyle = '#555555';
                 ctx.lineWidth = 2;
                 ctx.stroke();
+            });
+        }
+
+        // Draw MEV enemy
+        function drawMEV() {
+            if (!mev) return;
+
+            const x = scale.x(mev.x);
+            const y = scale.y(mev.y);
+            const size = scale.size(mev.size);
+
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(mev.rotation);
+
+            // Draw MEV body (red diamond)
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.moveTo(size, 0);
+            ctx.lineTo(0, size);
+            ctx.lineTo(-size, 0);
+            ctx.lineTo(0, -size);
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw MEV text (rotated -90 degrees to be upright)
+            ctx.save();
+            ctx.rotate(-Math.PI / 2);  // Rotate text 90 degrees counter-clockwise
+            ctx.fillStyle = '#ffffff';
+            ctx.font = scale.size(0.015) + 'px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('MEV', 0, 0);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        // Draw MEV projectiles
+        function drawMEVProjectiles() {
+            ctx.fillStyle = '#ff6666';
+            mevProjectiles.forEach(proj => {
+                ctx.beginPath();
+                ctx.arc(
+                    scale.x(proj.x),
+                    scale.y(proj.y),
+                    scale.size(0.006),
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
             });
         }
 
@@ -426,11 +488,126 @@
             });
         }
 
+        // Update MEV enemy
+        function updateMEV() {
+            if (!mev) return;
+
+            // Move MEV in a circular/wandering pattern (slower)
+            mev.angle += 0.01;  // Half speed
+            const targetX = 0.5 + Math.cos(mev.angle) * 0.3;
+            const targetY = 0.3 + Math.sin(mev.angle * 1.5) * 0.2;
+
+            // Smooth movement towards target (slower)
+            const dx = targetX - mev.x;
+            const dy = targetY - mev.y;
+            mev.x += dx * 0.01;  // Half speed
+            mev.y += dy * 0.01;  // Half speed
+
+            // Rotate to face player
+            const angleToPlayer = Math.atan2(player.y - mev.y, player.x - mev.x);
+            mev.rotation = angleToPlayer;
+
+            // Shooting logic (slower pace)
+            mevShootCooldown--;
+            if (mevShootCooldown <= 0 && Math.random() < 0.01) {  // Half the shooting probability
+                mevShoot();
+                mevShootCooldown = 120 + Math.random() * 240;  // 2-6 seconds between shots (doubled)
+            }
+        }
+
+        // MEV shoots
+        function mevShoot() {
+            if (!mev) return;
+
+            const projectileSpeed = 0.006;
+            mevProjectiles.push({
+                x: mev.x,
+                y: mev.y,
+                velocityX: Math.cos(mev.rotation) * projectileSpeed,
+                velocityY: Math.sin(mev.rotation) * projectileSpeed,
+                lifetime: 0
+            });
+        }
+
+        // Update MEV projectiles
+        function updateMEVProjectiles() {
+            for (let i = mevProjectiles.length - 1; i >= 0; i--) {
+                const proj = mevProjectiles[i];
+
+                // Update position
+                proj.x += proj.velocityX;
+                proj.y += proj.velocityY;
+                proj.lifetime++;
+
+                // Check collision with player
+                if (!invincible && !gameOver) {
+                    const dx = proj.x - player.x;
+                    const dy = proj.y - player.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < player.size + 0.006) {
+                        lives--;
+                        mevProjectiles.splice(i, 1);
+
+                        if (lives <= 0) {
+                            gameOver = true;
+                        } else {
+                            respawnPlayer();
+                        }
+                        continue;
+                    }
+                }
+
+                // Remove if off screen or too old
+                if (proj.x < 0 || proj.x > 1 || proj.y < 0 || proj.y > 1 || proj.lifetime > 180) {
+                    mevProjectiles.splice(i, 1);
+                }
+            }
+        }
+
+        // Check collision between player projectiles and MEV
+        function checkMEVCollision() {
+            if (!mev) return;
+
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const proj = projectiles[i];
+                const dx = proj.x - mev.x;
+                const dy = proj.y - mev.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < mev.size) {
+                    // MEV hit
+                    mev.health--;
+                    projectiles.splice(i, 1);
+
+                    if (mev.health <= 0) {
+                        // MEV destroyed
+                        score += 500;  // Bonus points for destroying MEV
+                        mev = null;
+                        mevProjectiles.length = 0;
+                    }
+                }
+            }
+        }
+
         // Start next level
         function nextLevel() {
             if (level >= 99) return;  // Max level is 99
 
             level++;
+
+            // Spawn MEV enemy every 3 levels
+            if (level % 3 === 0) {
+                mev = {
+                    x: 0.5,
+                    y: 0.1,
+                    rotation: 0,
+                    size: 0.04,
+                    angle: 0,
+                    health: 5  // Takes 5 hits to destroy
+                };
+                mevShootCooldown = 60;
+            }
 
             // Calculate number of asteroids to spawn (increases every 3 levels)
             const asteroidsToSpawn = 2 + Math.floor((level - 1) / 3);
@@ -514,6 +691,9 @@
             invincible = false;
             invincibleTimer = 0;
             projectiles.length = 0;
+            mev = null;
+            mevProjectiles.length = 0;
+            mevShootCooldown = 0;
 
             // Reset asteroids to original state
             asteroids.length = 0;
@@ -629,10 +809,13 @@
             updatePlayer();
             updateProjectiles();
             updateAsteroids();
+            updateMEV();
+            updateMEVProjectiles();
             checkCollisions();
+            checkMEVCollision();
 
-            // Check if all asteroids are destroyed
-            if (!gameOver && asteroids.length === 0) {
+            // Check if all asteroids are destroyed (and MEV if present)
+            if (!gameOver && asteroids.length === 0 && mev === null) {
                 nextLevel();
             }
 
