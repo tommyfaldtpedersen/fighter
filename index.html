@@ -103,6 +103,11 @@
         let invincible = false;  // Temporary invincibility after being hit
         let invincibleTimer = 0;
 
+        // Frame rate independent timing
+        let lastTime = performance.now();
+        const targetFPS = 60;
+        const targetFrameTime = 1000 / targetFPS;
+
         // MEV enemy
         let mev = null;  // Will be spawned every 3 levels
         const mevProjectiles = [];
@@ -412,14 +417,14 @@
         }
 
         // Update projectiles
-        function updateProjectiles() {
+        function updateProjectiles(timeScale = 1) {
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const proj = projectiles[i];
 
                 // Update position
-                proj.x += proj.velocityX;
-                proj.y += proj.velocityY;
-                proj.lifetime++;
+                proj.x += proj.velocityX * timeScale;
+                proj.y += proj.velocityY * timeScale;
+                proj.lifetime += timeScale;
 
                 // Check collision with asteroids
                 let hitAsteroid = false;
@@ -474,11 +479,11 @@
         }
 
         // Update asteroids
-        function updateAsteroids() {
+        function updateAsteroids(timeScale = 1) {
             asteroids.forEach(asteroid => {
                 // Update position
-                asteroid.x += asteroid.velocityX;
-                asteroid.y += asteroid.velocityY;
+                asteroid.x += asteroid.velocityX * timeScale;
+                asteroid.y += asteroid.velocityY * timeScale;
 
                 // Wrap around screen edges
                 if (asteroid.x < -asteroid.size) asteroid.x = 1 + asteroid.size;
@@ -489,12 +494,12 @@
         }
 
         // Update MEV enemy
-        function updateMEV() {
+        function updateMEV(timeScale = 1) {
             if (!mev) return;
 
             // Move MEV like an asteroid (straight line)
-            mev.x += mev.velocityX;
-            mev.y += mev.velocityY;
+            mev.x += mev.velocityX * timeScale;
+            mev.y += mev.velocityY * timeScale;
 
             // Wrap around screen edges
             if (mev.x < -mev.size) mev.x = 1 + mev.size;
@@ -507,7 +512,7 @@
             mev.rotation = angleToPlayer;
 
             // Shooting logic (slower pace)
-            mevShootCooldown--;
+            mevShootCooldown -= timeScale;
             if (mevShootCooldown <= 0 && Math.random() < 0.01) {  // Half the shooting probability
                 mevShoot();
                 mevShootCooldown = 120 + Math.random() * 240;  // 2-6 seconds between shots (doubled)
@@ -529,14 +534,14 @@
         }
 
         // Update MEV projectiles
-        function updateMEVProjectiles() {
+        function updateMEVProjectiles(timeScale = 1) {
             for (let i = mevProjectiles.length - 1; i >= 0; i--) {
                 const proj = mevProjectiles[i];
 
                 // Update position
-                proj.x += proj.velocityX;
-                proj.y += proj.velocityY;
-                proj.lifetime++;
+                proj.x += proj.velocityX * timeScale;
+                proj.y += proj.velocityY * timeScale;
+                proj.lifetime += timeScale;
 
                 // Check collision with player
                 if (!invincible && !gameOver) {
@@ -598,7 +603,7 @@
             // Spawn MEV enemy every 3 levels
             if (level % 3 === 0) {
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 0.0003 + (Math.random() * 0.0001);
+                const speed = 0.0004 + (Math.random() * 0.0002);  // Same speed as asteroids
                 mev = {
                     x: 0.5,
                     y: 0.1,
@@ -720,12 +725,12 @@
         }
 
         // Update player physics
-        function updatePlayer() {
+        function updatePlayer(timeScale = 1) {
             if (gameOver) return;
 
             // Update invincibility timer
             if (invincible) {
-                invincibleTimer--;
+                invincibleTimer -= timeScale;
                 if (invincibleTimer <= 0) {
                     invincible = false;
                 }
@@ -738,31 +743,31 @@
 
             // Rotation
             if (keys.ArrowLeft) {
-                player.rotation -= player.rotationSpeed;
+                player.rotation -= player.rotationSpeed * timeScale;
             }
             if (keys.ArrowRight) {
-                player.rotation += player.rotationSpeed;
+                player.rotation += player.rotationSpeed * timeScale;
             }
 
             // Acceleration (forward in pointing direction)
             if (keys.ArrowUp) {
-                player.velocityX += Math.cos(player.rotation) * player.acceleration;
-                player.velocityY += Math.sin(player.rotation) * player.acceleration;
+                player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale;
+                player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale;
             }
 
             // Braking
             if (keys.ArrowDown) {
-                player.velocityX *= player.brakeForce;
-                player.velocityY *= player.brakeForce;
+                player.velocityX *= Math.pow(player.brakeForce, timeScale);
+                player.velocityY *= Math.pow(player.brakeForce, timeScale);
             }
 
             // Apply friction
-            player.velocityX *= player.friction;
-            player.velocityY *= player.friction;
+            player.velocityX *= Math.pow(player.friction, timeScale);
+            player.velocityY *= Math.pow(player.friction, timeScale);
 
             // Update position
-            player.x += player.velocityX;
-            player.y += player.velocityY;
+            player.x += player.velocityX * timeScale;
+            player.y += player.velocityY * timeScale;
 
             // Wrap around screen edges
             if (player.x < 0) player.x = 1;
@@ -807,18 +812,26 @@
         window.addEventListener('resize', resizeCanvas);
 
         // Game loop
-        function gameLoop() {
-            updatePlayer();
-            updateProjectiles();
-            updateAsteroids();
-            updateMEV();
-            updateMEVProjectiles();
-            checkCollisions();
-            checkMEVCollision();
+        function gameLoop(currentTime) {
+            // Calculate delta time and normalize to 60 FPS
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            const timeScale = deltaTime / targetFrameTime;
 
-            // Check if all asteroids are destroyed (and MEV if present)
-            if (!gameOver && asteroids.length === 0 && mev === null) {
-                nextLevel();
+            // Only update if time scale is reasonable (prevent huge jumps)
+            if (timeScale > 0 && timeScale < 3) {
+                updatePlayer(timeScale);
+                updateProjectiles(timeScale);
+                updateAsteroids(timeScale);
+                updateMEV(timeScale);
+                updateMEVProjectiles(timeScale);
+                checkCollisions();
+                checkMEVCollision();
+
+                // Check if all asteroids are destroyed (and MEV if present)
+                if (!gameOver && asteroids.length === 0 && mev === null) {
+                    nextLevel();
+                }
             }
 
             draw();
