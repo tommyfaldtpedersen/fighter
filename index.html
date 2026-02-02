@@ -102,6 +102,7 @@
         let level = 1;
         let invincible = false;  // Temporary invincibility after being hit
         let invincibleTimer = 0;
+        let levelTransition = false;  // Prevent multiple nextLevel calls
 
         // Frame rate independent timing
         let lastTime = performance.now();
@@ -623,6 +624,8 @@
             for (let i = 0; i < asteroidsToSpawn; i++) {
                 let x, y, distance;
                 const minDistance = 0.3;  // Minimum distance from player
+                let attempts = 0;
+                const maxAttempts = 100;  // Prevent infinite loop
 
                 // Keep trying until we find a safe spawn position
                 do {
@@ -631,6 +634,12 @@
                     const dx = x - player.x;
                     const dy = y - player.y;
                     distance = Math.sqrt(dx * dx + dy * dy);
+                    attempts++;
+
+                    // If we can't find a safe spot, just use what we have
+                    if (attempts >= maxAttempts) {
+                        break;
+                    }
                 } while (distance < minDistance);
 
                 const angle = Math.random() * Math.PI * 2;
@@ -648,6 +657,9 @@
             // Give player temporary invincibility
             invincible = true;
             invincibleTimer = 120;  // 2 seconds
+
+            // Clear transition flag after spawning complete
+            levelTransition = false;
         }
 
         // Check collision between player and asteroids
@@ -697,6 +709,7 @@
             level = 1;
             invincible = false;
             invincibleTimer = 0;
+            levelTransition = false;
             projectiles.length = 0;
             mev = null;
             mevProjectiles.length = 0;
@@ -829,7 +842,7 @@
                 checkMEVCollision();
 
                 // Check if all asteroids are destroyed (and MEV if present)
-                if (!gameOver && asteroids.length === 0 && mev === null) {
+                if (!gameOver && !levelTransition && asteroids.length === 0 && mev === null) {
                     nextLevel();
                 }
             }
@@ -839,7 +852,8 @@
         }
 
         // Start game loop
-        gameLoop();
+        lastTime = performance.now();
+        gameLoop(lastTime);
     </script>
 </body>
 
