@@ -25,7 +25,7 @@
 
         canvas {
             border: 2px solid #fff;
-            background-color: #000;
+            background-color: #050a0f;
             max-width: 100%;
             max-height: 100vh;
             display: block;
@@ -87,7 +87,7 @@
                 velocityX: 0.0005,
                 velocityY: 0.0003,
                 size: 0.06,
-                color: '#888888'
+                color: '#e5e7e7'
             },
             {
                 x: 0.7,
@@ -95,7 +95,7 @@
                 velocityX: -0.0003,
                 velocityY: 0.0004,
                 size: 0.06,  // Same size as first asteroid
-                color: '#999999'
+                color: '#e5e7e7'
             }
         ];
 
@@ -309,7 +309,7 @@
                 ctx.fill();
 
                 // Add texture to asteroids
-                ctx.strokeStyle = '#555555';
+                ctx.strokeStyle = asteroid.color;
                 ctx.lineWidth = 2;
                 ctx.stroke();
             });
@@ -687,7 +687,7 @@
                     velocityX: Math.cos(angle) * speed,
                     velocityY: Math.sin(angle) * speed,
                     size: 0.06,
-                    color: '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '8')
+                    color: '#e5e7e7'
                 });
             }
 
@@ -759,7 +759,7 @@
                     velocityX: 0.0005,
                     velocityY: 0.0003,
                     size: 0.06,
-                    color: '#888888'
+                    color: '#e5e7e7'
                 },
                 {
                     x: 0.7,
@@ -767,7 +767,7 @@
                     velocityX: -0.0003,
                     velocityY: 0.0004,
                     size: 0.06,
-                    color: '#999999'
+                    color: '#e5e7e7'
                 }
             );
         }
