@@ -68,6 +68,10 @@
             ArrowDown: false,
             ArrowLeft: false,
             ArrowRight: false,
+            'w': false,
+            's': false,
+            'a': false,
+            'd': false,
             ' ': false  // Space key
         };
 
@@ -226,7 +230,7 @@
             ctx.fill();
 
             // Draw thrust flame when accelerating
-            if (keys.ArrowUp) {
+            if (keys.ArrowUp || keys['w']) {
                 ctx.fillStyle = '#ff6600';
                 ctx.beginPath();
                 ctx.moveTo(-size, size * 0.5);
@@ -685,13 +689,10 @@
             });
         }
 
-        // Respawn player at center with invincibility
+        // Respawn player at current position with invincibility
         function respawnPlayer() {
-            player.x = 0.5;
-            player.y = 0.5;
             player.velocityX = 0;
             player.velocityY = 0;
-            player.rotation = 0;
             invincible = true;
             invincibleTimer = 180;  // 3 seconds of invincibility at 60fps
         }
@@ -755,21 +756,21 @@
             }
 
             // Rotation
-            if (keys.ArrowLeft) {
+            if (keys.ArrowLeft || keys['a']) {
                 player.rotation -= player.rotationSpeed * timeScale;
             }
-            if (keys.ArrowRight) {
+            if (keys.ArrowRight || keys['d']) {
                 player.rotation += player.rotationSpeed * timeScale;
             }
 
             // Acceleration (forward in pointing direction)
-            if (keys.ArrowUp) {
+            if (keys.ArrowUp || keys['w']) {
                 player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale;
                 player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale;
             }
 
             // Braking
-            if (keys.ArrowDown) {
+            if (keys.ArrowDown || keys['s']) {
                 player.velocityX *= Math.pow(player.brakeForce, timeScale);
                 player.velocityY *= Math.pow(player.brakeForce, timeScale);
             }
