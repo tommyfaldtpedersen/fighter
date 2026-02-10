@@ -87,7 +87,9 @@
                 velocityX: 0.0005,
                 velocityY: 0.0003,
                 size: 0.06,
-                color: '#e5e7e7'
+                color: '#e5e7e7',
+                rotation: 0,
+                rotationSpeed: 0.02
             },
             {
                 x: 0.7,
@@ -95,7 +97,9 @@
                 velocityX: -0.0003,
                 velocityY: 0.0004,
                 size: 0.06,  // Same size as first asteroid
-                color: '#e5e7e7'
+                color: '#e5e7e7',
+                rotation: 0,
+                rotationSpeed: -0.015
             }
         ];
 
@@ -297,21 +301,28 @@
         // Draw asteroids
         function drawAsteroids() {
             asteroids.forEach(asteroid => {
+                const size = scale.size(asteroid.size);
+                const x = scale.x(asteroid.x);
+                const y = scale.y(asteroid.y);
+                const width = size * 2;
+                const height = size * 2;
+                const radius = size * 0.2; // 20% of size for rounded corners
+
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(asteroid.rotation);
+
                 ctx.fillStyle = asteroid.color;
                 ctx.beginPath();
-                ctx.arc(
-                    scale.x(asteroid.x),
-                    scale.y(asteroid.y),
-                    scale.size(asteroid.size),
-                    0,
-                    Math.PI * 2
-                );
+                ctx.roundRect(-size, -size, width, height, radius);
                 ctx.fill();
 
                 // Add texture to asteroids
                 ctx.strokeStyle = asteroid.color;
                 ctx.lineWidth = 2;
                 ctx.stroke();
+
+                ctx.restore();
             });
         }
 
@@ -491,7 +502,9 @@
                                     velocityX: Math.cos(angle) * speed,
                                     velocityY: Math.sin(angle) * speed,
                                     size: newSize,
-                                    color: asteroid.color
+                                    color: asteroid.color,
+                                    rotation: Math.random() * Math.PI * 2,
+                                    rotationSpeed: (Math.random() - 0.5) * 0.04
                                 });
                             }
                         }
@@ -515,6 +528,9 @@
                 // Update position
                 asteroid.x += asteroid.velocityX * timeScale;
                 asteroid.y += asteroid.velocityY * timeScale;
+
+                // Update rotation
+                asteroid.rotation += asteroid.rotationSpeed * timeScale;
 
                 // Wrap around screen edges
                 if (asteroid.x < -asteroid.size) asteroid.x = 1 + asteroid.size;
@@ -687,7 +703,9 @@
                     velocityX: Math.cos(angle) * speed,
                     velocityY: Math.sin(angle) * speed,
                     size: 0.06,
-                    color: '#e5e7e7'
+                    color: '#e5e7e7',
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.04
                 });
             }
 
@@ -759,7 +777,9 @@
                     velocityX: 0.0005,
                     velocityY: 0.0003,
                     size: 0.06,
-                    color: '#e5e7e7'
+                    color: '#e5e7e7',
+                    rotation: 0,
+                    rotationSpeed: 0.02
                 },
                 {
                     x: 0.7,
@@ -767,7 +787,9 @@
                     velocityX: -0.0003,
                     velocityY: 0.0004,
                     size: 0.06,
-                    color: '#e5e7e7'
+                    color: '#e5e7e7',
+                    rotation: 0,
+                    rotationSpeed: -0.015
                 }
             );
         }
