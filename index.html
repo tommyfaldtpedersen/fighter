@@ -123,25 +123,6 @@
         let mev = null;  // Will be spawned every 3 levels
         const mevProjectiles = [];
         let mevShootCooldown = 0;
-
-        // Other game objects
-        const gameObjects = {
-            enemy: {
-                x: 0.7,
-                y: 0.3,
-                width: 0.08,
-                height: 0.12,
-                color: '#ff0000'
-            },
-            ground: {
-                x: 0,
-                y: 0.8,      // 80% down from top
-                width: 1,     // Full width
-                height: 0.2,  // 20% of canvas height
-                color: '#8B4513'
-            }
-        };
-
         // Resize canvas to fit viewport while maintaining aspect ratio
         function resizeCanvas() {
             const aspectRatio = 4 / 3; // Change this to your preferred ratio (16/9, 4/3, etc.)
@@ -169,17 +150,6 @@
         function draw() {
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw other game objects
-            for (const [name, obj] of Object.entries(gameObjects)) {
-                ctx.fillStyle = obj.color;
-                ctx.fillRect(
-                    scale.x(obj.x),
-                    scale.y(obj.y),
-                    scale.x(obj.width),
-                    scale.y(obj.height)
-                );
-            }
 
             // Draw asteroids
             drawAsteroids();
@@ -383,7 +353,7 @@
             const y = scale.y(player.y);
             const size = scale.size(player.size);
 
-            ctx.fillStyle = '#ff6600';
+            ctx.fillStyle = '#ffffff';
             for (let i = 0; i < 8; i++) {
                 const angle = (Math.PI * 2 / 8) * i;
                 ctx.beginPath();
@@ -652,6 +622,7 @@
         function nextLevel() {
             if (level >= 999) return;  // Max level is 999
 
+            levelTransition = true;  // Set flag to prevent multiple calls
             level++;
 
             // Spawn MEV enemy every 3 levels
