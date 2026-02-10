@@ -16,6 +16,7 @@
             margin: 0;
             padding: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
@@ -23,18 +24,172 @@
             overflow: hidden;
         }
 
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
         canvas {
             border: 2px solid #fff;
             background-color: #050a0f;
             max-width: 100%;
-            max-height: 100vh;
+            max-height: 70vh;
             display: block;
+        }
+
+        #touch-controls {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            height: 150px;
+            position: relative;
+            background-color: rgba(34, 34, 34, 0.8);
+            border: 2px solid #444;
+            border-radius: 10px;
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            #touch-controls {
+                display: block;
+            }
+        }
+
+        .joystick {
+            position: absolute;
+            left: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 120px;
+            height: 120px;
+        }
+
+        .joystick-base {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .joystick-handle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s;
+            pointer-events: none;
+        }
+
+        .shoot-button {
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .shoot-button.active {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .shoot-button::before,
+        .shoot-button::after {
+            content: '';
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .shoot-button::before {
+            width: 30px;
+            height: 3px;
+        }
+
+        .shoot-button::after {
+            width: 3px;
+            height: 30px;
+        }
+
+        .shoot-button.active::before,
+        .shoot-button.active::after {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .pause-button {
+            position: absolute;
+            left: calc(55% + 5px);
+            bottom: 10px;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .pause-button.active {
+            background-color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.7);
+        }
+
+        .pause-icon {
+            width: 20px;
+            height: 24px;
+            position: relative;
+            display: flex;
+            gap: 6px;
+        }
+
+        .pause-icon::before,
+        .pause-icon::after {
+            content: '';
+            width: 6px;
+            height: 24px;
+            background-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .pause-button.active .pause-icon::before,
+        .pause-button.active .pause-icon::after {
+            background-color: rgba(255, 255, 255, 0.9);
         }
     </style>
 </head>
 
 <body>
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <div id="game-container">
+        <canvas id="canvas" width="800" height="600"></canvas>
+        <div id="touch-controls">
+            <div class="joystick" id="joystick">
+                <div class="joystick-base"></div>
+                <div class="joystick-handle" id="joystick-handle"></div>
+            </div>
+            <div class="pause-button" id="pause-button">
+                <div class="pause-icon"></div>
+            </div>
+            <div class="shoot-button" id="shoot-button"></div>
+        </div>
+    </div>
 
     <script>
         const canvas = document.getElementById('canvas');
@@ -74,6 +229,25 @@
             'd': false,
             ' ': false  // Space key
         };
+
+        // Touch controls
+        const touchControls = {
+            joystick: {
+                active: false,
+                startX: 0,
+                startY: 0,
+                currentX: 0,
+                currentY: 0,
+                identifier: null
+            },
+            shootButton: {
+                active: false,
+                identifier: null
+            }
+        };
+        const joystickRadius = 60;
+        const joystickHandleRadius = 25;
+        const shootButtonRadius = 40;
 
         // Projectiles array
         const projectiles = [];
@@ -399,7 +573,11 @@
             ctx.font = scale.size(0.05) + 'px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 + scale.size(0.1));
-            ctx.fillText('Press R to Restart', canvas.width / 2, canvas.height / 2 + scale.size(0.15));
+
+            // Show appropriate restart instruction based on device
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const restartText = isTouchDevice ? 'Tap to Restart' : 'Press R to Restart';
+            ctx.fillText(restartText, canvas.width / 2, canvas.height / 2 + scale.size(0.15));
         }
 
         // Draw pause screen
@@ -810,29 +988,56 @@
                 }
             }
 
-            // Shooting
-            if (keys[' ']) {
+            // Shooting (keyboard or touch)
+            if (keys[' '] || touchControls.shootButton.active) {
                 shoot();
             }
 
-            // Rotation
-            if (keys.ArrowLeft || keys['a']) {
-                player.rotation -= player.rotationSpeed * timeScale;
-            }
-            if (keys.ArrowRight || keys['d']) {
-                player.rotation += player.rotationSpeed * timeScale;
-            }
+            // Handle touch joystick input
+            if (touchControls.joystick.active) {
+                const dx = touchControls.joystick.currentX - touchControls.joystick.startX;
+                const dy = touchControls.joystick.currentY - touchControls.joystick.startY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Acceleration (forward in pointing direction)
-            if (keys.ArrowUp || keys['w']) {
-                player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale;
-                player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale;
-            }
+                if (distance > 10) { // Dead zone
+                    const angle = Math.atan2(dy, dx);
+                    const targetRotation = angle;
 
-            // Braking
-            if (keys.ArrowDown || keys['s']) {
-                player.velocityX *= Math.pow(player.brakeForce, timeScale);
-                player.velocityY *= Math.pow(player.brakeForce, timeScale);
+                    // Smoothly rotate toward joystick direction
+                    let rotationDiff = targetRotation - player.rotation;
+                    // Normalize to -PI to PI
+                    while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+                    while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+
+                    if (Math.abs(rotationDiff) > 0.05) {
+                        player.rotation += Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
+                    }
+
+                    // Thrust based on joystick distance
+                    const thrustAmount = Math.min(distance / joystickRadius, 1);
+                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount * 2;
+                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount * 2;
+                }
+            } else {
+                // Keyboard rotation
+                if (keys.ArrowLeft || keys['a']) {
+                    player.rotation -= player.rotationSpeed * timeScale;
+                }
+                if (keys.ArrowRight || keys['d']) {
+                    player.rotation += player.rotationSpeed * timeScale;
+                }
+
+                // Keyboard acceleration
+                if (keys.ArrowUp || keys['w']) {
+                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale;
+                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale;
+                }
+
+                // Keyboard braking
+                if (keys.ArrowDown || keys['s']) {
+                    player.velocityX *= Math.pow(player.brakeForce, timeScale);
+                    player.velocityY *= Math.pow(player.brakeForce, timeScale);
+                }
             }
 
             // Apply friction
@@ -889,6 +1094,101 @@
 
         // Resize canvas when window size changes
         window.addEventListener('resize', resizeCanvas);
+
+        // Touch event listeners for HTML controls
+        const joystickElement = document.getElementById('joystick');
+        const joystickHandle = document.getElementById('joystick-handle');
+        const shootButtonElement = document.getElementById('shoot-button');
+        const pauseButtonElement = document.getElementById('pause-button');
+
+        joystickElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0]; // Use changedTouches for the new touch
+            const rect = joystickElement.getBoundingClientRect();
+            touchControls.joystick.active = true;
+            touchControls.joystick.identifier = touch.identifier;
+            touchControls.joystick.startX = rect.left + rect.width / 2;
+            touchControls.joystick.startY = rect.top + rect.height / 2;
+            touchControls.joystick.currentX = touch.clientX;
+            touchControls.joystick.currentY = touch.clientY;
+            updateJoystickVisual();
+        });
+
+        joystickElement.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (!touchControls.joystick.active) return;
+
+            // Find the correct touch by identifier
+            for (let touch of e.touches) {
+                if (touch.identifier === touchControls.joystick.identifier) {
+                    touchControls.joystick.currentX = touch.clientX;
+                    touchControls.joystick.currentY = touch.clientY;
+                    updateJoystickVisual();
+                    break;
+                }
+            }
+        });
+
+        joystickElement.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touchControls.joystick.active = false;
+            touchControls.joystick.identifier = null;
+            joystickHandle.style.left = '50%';
+            joystickHandle.style.top = '50%';
+        });
+
+        shootButtonElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchControls.shootButton.active = true;
+            touchControls.shootButton.identifier = e.changedTouches[0].identifier;
+            shootButtonElement.classList.add('active');
+        });
+
+        shootButtonElement.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touchControls.shootButton.active = false;
+            touchControls.shootButton.identifier = null;
+            shootButtonElement.classList.remove('active');
+        });
+
+        shootButtonElement.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            touchControls.shootButton.active = false;
+            touchControls.shootButton.identifier = null;
+            shootButtonElement.classList.remove('active');
+        });
+
+        pauseButtonElement.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameOver) {
+                paused = !paused;
+                pauseButtonElement.classList.toggle('active', paused);
+            }
+        });
+
+        function updateJoystickVisual() {
+            const dx = touchControls.joystick.currentX - touchControls.joystick.startX;
+            const dy = touchControls.joystick.currentY - touchControls.joystick.startY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDistance = 35; // Half of joystick radius minus handle radius
+
+            if (distance > maxDistance) {
+                const angle = Math.atan2(dy, dx);
+                joystickHandle.style.left = (50 + (Math.cos(angle) * maxDistance * 100 / 60)) + '%';
+                joystickHandle.style.top = (50 + (Math.sin(angle) * maxDistance * 100 / 60)) + '%';
+            } else {
+                joystickHandle.style.left = (50 + (dx * 100 / 60)) + '%';
+                joystickHandle.style.top = (50 + (dy * 100 / 60)) + '%';
+            }
+        }
+
+        // Canvas tap to restart game (mobile)
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameOver) {
+                e.preventDefault();
+                resetGame();
+            }
+        });
 
         // Game loop
         function gameLoop(currentTime) {
