@@ -1013,10 +1013,10 @@
                         player.rotation += Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
                     }
 
-                    // Thrust based on joystick distance
+                    // Thrust based on joystick distance (reduced to half strength)
                     const thrustAmount = Math.min(distance / joystickRadius, 1);
-                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount * 2;
-                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount * 2;
+                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
+                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
                 }
             } else {
                 // Keyboard rotation
