@@ -55,7 +55,7 @@
             velocityY: 0,     // Velocity in y direction
             rotation: 0,      // Angle in radians (0 = pointing right)
             size: 0.03,       // Size relative to canvas
-            color: '#00ff00',
+            color: '#ffffff',
             acceleration: 0.0002,  // Acceleration rate
             rotationSpeed: 0.08,   // Rotation speed
             friction: 0.98,        // Friction/drag (0.98 = 2% speed loss per frame)
@@ -242,7 +242,7 @@
 
             // Draw thrust flame when accelerating
             if (keys.ArrowUp || keys['w']) {
-                ctx.fillStyle = '#ff6600';
+                ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.moveTo(-size, size * 0.5);
                 ctx.lineTo(-size * 1.5, 0);
@@ -270,7 +270,7 @@
                 ctx.rotate(-Math.PI / 2);  // Point upward
 
                 // Draw small spaceship icon
-                ctx.fillStyle = '#00ff00';
+                ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.moveTo(shipSize, 0);
                 ctx.lineTo(-shipSize, shipSize);
@@ -420,7 +420,7 @@
 
         // Draw projectiles
         function drawProjectiles() {
-            ctx.fillStyle = '#ffff00';
+            ctx.fillStyle = '#ffffff';
             projectiles.forEach(proj => {
                 ctx.beginPath();
                 ctx.arc(
