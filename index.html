@@ -283,7 +283,7 @@
             ctx.fillStyle = '#ffffff';
             ctx.font = scale.size(0.04) + 'px Arial';
             ctx.textAlign = 'right';
-            ctx.fillText('Score: ' + score, canvas.width - scale.size(0.03), scale.size(0.04));
+            ctx.fillText(score.toString().padStart(8, '0'), canvas.width - scale.size(0.03), scale.size(0.04));
         }
 
         // Draw level in top middle
@@ -291,7 +291,7 @@
             ctx.fillStyle = '#ffffff';
             ctx.font = scale.size(0.05) + 'px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('Level ' + level, canvas.width / 2, scale.size(0.05));
+            ctx.fillText(level.toString().padStart(3, '0'), canvas.width / 2, scale.size(0.05));
         }
 
         // Draw asteroids
@@ -634,7 +634,7 @@
 
         // Start next level
         function nextLevel() {
-            if (level >= 99) return;  // Max level is 99
+            if (level >= 999) return;  // Max level is 999
 
             level++;
 
