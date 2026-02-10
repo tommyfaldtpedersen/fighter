@@ -201,12 +201,15 @@
             ctx.translate(x, y);
             ctx.rotate(player.rotation);
 
-            // Draw triangle (spaceship)
+            // Draw triangle (spaceship) with cutout at back
             ctx.fillStyle = player.color;
             ctx.beginPath();
-            ctx.moveTo(size, 0);           // Front point
-            ctx.lineTo(-size, size);       // Bottom back
-            ctx.lineTo(-size, -size);      // Top back
+            ctx.moveTo(size, 0);              // Front point
+            ctx.lineTo(-size, size);          // Bottom back
+            ctx.lineTo(-size, size * 0.5);    // Bottom of cutout
+            ctx.lineTo(-size * 0.7, 0);       // Center of cutout (not as deep as thrust)
+            ctx.lineTo(-size, -size * 0.5);   // Top of cutout
+            ctx.lineTo(-size, -size);         // Top back
             ctx.closePath();
             ctx.fill();
 
@@ -214,9 +217,10 @@
             if (keys.ArrowUp || keys['w']) {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.moveTo(-size, size * 0.5);
-                ctx.lineTo(-size * 1.5, 0);
-                ctx.lineTo(-size, -size * 0.5);
+                ctx.moveTo(-size * 0.7, size * 0.5);   // Start from cutout edge (top)
+                ctx.lineTo(-size * 1.5, 0);             // Flame tip
+                ctx.lineTo(-size * 0.7, -size * 0.5);  // End at cutout edge (bottom)
+                ctx.lineTo(-size * 0.7, 0);             // Back to center of cutout
                 ctx.closePath();
                 ctx.fill();
             }
@@ -239,12 +243,15 @@
                 ctx.translate(x, y);
                 ctx.rotate(-Math.PI / 2);  // Point upward
 
-                // Draw small spaceship icon
+                // Draw small spaceship icon with cutout
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
-                ctx.moveTo(shipSize, 0);
-                ctx.lineTo(-shipSize, shipSize);
-                ctx.lineTo(-shipSize, -shipSize);
+                ctx.moveTo(shipSize, 0);                    // Front point
+                ctx.lineTo(-shipSize, shipSize);            // Bottom back
+                ctx.lineTo(-shipSize, shipSize * 0.5);      // Bottom of cutout
+                ctx.lineTo(-shipSize * 0.7, 0);             // Center of cutout
+                ctx.lineTo(-shipSize, -shipSize * 0.5);     // Top of cutout
+                ctx.lineTo(-shipSize, -shipSize);           // Top back
                 ctx.closePath();
                 ctx.fill();
 
