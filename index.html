@@ -416,11 +416,17 @@
             if (!canShoot) return;
 
             const projectileSpeed = 0.008;  // Speed of projectile
+
+            // Calculate position at the front point of the ship
+            const frontX = player.x + Math.cos(player.rotation) * player.size;
+            const frontY = player.y + Math.sin(player.rotation) * player.size;
+
+            // Projectile inherits player velocity plus its own speed in the firing direction
             projectiles.push({
-                x: player.x,
-                y: player.y,
-                velocityX: Math.cos(player.rotation) * projectileSpeed,
-                velocityY: Math.sin(player.rotation) * projectileSpeed,
+                x: frontX,
+                y: frontY,
+                velocityX: player.velocityX + Math.cos(player.rotation) * projectileSpeed,
+                velocityY: player.velocityY + Math.sin(player.rotation) * projectileSpeed,
                 lifetime: 0  // Track how long projectile has existed
             });
 
