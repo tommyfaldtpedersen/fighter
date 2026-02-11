@@ -577,7 +577,7 @@
         // Draw score in upper right corner
         function drawScore() {
             ctx.fillStyle = '#ffffff';
-            ctx.font = scale.size(0.04) + 'px Arial';
+            ctx.font = scale.size(0.04) + 'px "Courier New", monospace';
             ctx.textAlign = 'right';
             ctx.fillText(score.toString().padStart(8, '0'), canvas.width - scale.size(0.03), scale.size(0.04));
         }
@@ -585,7 +585,7 @@
         // Draw level in top middle
         function drawLevel() {
             ctx.fillStyle = '#ffffff';
-            ctx.font = scale.size(0.05) + 'px Arial';
+            ctx.font = scale.size(0.05) + 'px "Courier New", monospace';
             ctx.textAlign = 'center';
             ctx.fillText(level.toString().padStart(3, '0'), canvas.width / 2, scale.size(0.05));
         }
@@ -664,7 +664,7 @@
             ctx.save();
             ctx.rotate(-Math.PI / 2);  // Rotate text 90 degrees counter-clockwise
             ctx.fillStyle = '#000000';
-            ctx.font = scale.size(0.0225) + 'px Arial';
+            ctx.font = scale.size(0.0225) + 'px "Courier New", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('MEV', 0, 0);
@@ -711,7 +711,7 @@
 
             // Game over text
             ctx.fillStyle = '#ffffff';
-            ctx.font = scale.size(0.05) + 'px Arial';
+            ctx.font = scale.size(0.05) + 'px "Courier New", monospace';
             ctx.textAlign = 'center';
             ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 + scale.size(0.1));
 
@@ -727,10 +727,10 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = scale.size(0.06) + 'px Arial';
+            ctx.font = scale.size(0.06) + 'px "Courier New", monospace';
             ctx.textAlign = 'center';
             ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
-            ctx.font = scale.size(0.03) + 'px Arial';
+            ctx.font = scale.size(0.03) + 'px "Courier New", monospace';
             ctx.fillText('Press ESC or P to Resume', canvas.width / 2, canvas.height / 2 + scale.size(0.08));
         }
 
