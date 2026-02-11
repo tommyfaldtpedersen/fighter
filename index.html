@@ -841,8 +841,8 @@
                 const angle = Math.random() * Math.PI * 2;
                 const speed = 0.0004 + (Math.random() * 0.0002);  // Same speed as asteroids
                 mev = {
-                    x: 0.5,
-                    y: 0.1,
+                    x: Math.random(),
+                    y: Math.random(),
                     velocityX: Math.cos(angle) * speed,
                     velocityY: Math.sin(angle) * speed,
                     rotation: 0,
@@ -1207,7 +1207,8 @@
                 checkCollisions();
                 checkMEVCollision();
 
-                // Check if all asteroids are destroyed (and MEV if present)
+                // Check if level is complete
+                // Wait for all asteroids to be destroyed, and if MEV exists, wait for it too
                 if (!gameOver && !levelTransition && asteroids.length === 0 && mev === null) {
                     nextLevel();
                 }
