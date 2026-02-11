@@ -263,6 +263,60 @@
             oscillator2.stop(now + 0.3);
         }
 
+        // Play enemy hit sound effect
+        function playEnemyHitSound() {
+            if (!audioContext) return;
+
+            const now = audioContext.currentTime;
+
+            // Create sharp metallic hit sound
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Quick metallic ping
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(1200, now);
+            oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+
+            // Short sharp volume envelope
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.05);
+        }
+
+        // Play level complete triumph sound
+        function playTriumphSound() {
+            if (!audioContext) return;
+
+            const now = audioContext.currentTime;
+
+            // Create uplifting victory melody
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Victory ascending tones
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(262, now);        // C4
+            oscillator.frequency.setValueAtTime(330, now + 0.1);  // E4
+            oscillator.frequency.setValueAtTime(392, now + 0.2);  // G4
+
+            // Volume envelope
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.setValueAtTime(0.3, now + 0.2);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.4);
+        }
+
         // Play player death sound effect
         function playPlayerDeathSound() {
             if (!audioContext) return;
@@ -971,6 +1025,9 @@
                         mev = null;
                         mevProjectiles.length = 0;
                         playEnemyDeathSound();
+                    } else {
+                        // MEV hit but not destroyed
+                        playEnemyHitSound();
                     }
                 }
             }
@@ -982,6 +1039,7 @@
 
             levelTransition = true;  // Set flag to prevent multiple calls
             level++;
+            playTriumphSound();
 
             // Spawn MEV enemy every 3 levels
             if (level % 3 === 0) {
