@@ -195,6 +195,147 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
+        // Audio context for sound effects
+        let audioContext = null;
+
+        // Initialize audio context on first user interaction
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Play shoot sound effect
+        function playShootSound() {
+            if (!audioContext) return;
+
+            const now = audioContext.currentTime;
+
+            // Create oscillator for laser sound
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Laser sound: start high, drop quickly
+            oscillator.frequency.setValueAtTime(800, now);
+            oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+
+            // Volume envelope
+            gainNode.gain.setValueAtTime(0.3, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+            oscillator.start(now);
+            oscillator.stop(now + 0.1);
+        }
+
+        // Play explosion sound effect
+        function playExplosionSound() {
+            if (!audioContext) return;
+
+            const now = audioContext.currentTime;
+
+            // Create noise-like explosion using multiple oscillators
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Explosion sound: low rumble that decays
+            oscillator1.type = 'sawtooth';
+            oscillator2.type = 'square';
+            oscillator1.frequency.setValueAtTime(120, now);
+            oscillator1.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+            oscillator2.frequency.setValueAtTime(80, now);
+            oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+
+            // Volume envelope with quick attack and decay
+            gainNode.gain.setValueAtTime(0.4, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+            oscillator1.start(now);
+            oscillator1.stop(now + 0.3);
+            oscillator2.start(now);
+            oscillator2.stop(now + 0.3);
+        }
+
+        // Play player death sound effect
+        function playPlayerDeathSound() {
+            if (!audioContext) return;
+
+            const now = audioContext.currentTime;
+
+            // Create dramatic crash sound for player
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const oscillator3 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            oscillator3.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Harsh crash with multiple frequencies
+            oscillator1.type = 'sawtooth';
+            oscillator2.type = 'square';
+            oscillator3.type = 'triangle';
+            oscillator1.frequency.setValueAtTime(300, now);
+            oscillator1.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+            oscillator2.frequency.setValueAtTime(180, now);
+            oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+            oscillator3.frequency.setValueAtTime(450, now);
+            oscillator3.frequency.exponentialRampToValueAtTime(60, now + 0.5);
+
+            // Volume envelope
+            gainNode.gain.setValueAtTime(0.5, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+            oscillator1.start(now);
+            oscillator1.stop(now + 0.5);
+            oscillator2.start(now);
+            oscillator2.stop(now + 0.5);
+            oscillator3.start(now);
+            oscillator3.stop(now + 0.5);
+        }
+
+        // Play enemy death sound effect
+        function playEnemyDeathSound() {
+            if (!audioContext) return;
+
+            const now = audioContext.currentTime;
+
+            // Create metallic explosion for enemy
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator1.connect(gainNode);
+            oscillator2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Higher pitched metallic sound
+            oscillator1.type = 'square';
+            oscillator2.type = 'sawtooth';
+            oscillator1.frequency.setValueAtTime(600, now);
+            oscillator1.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+            oscillator2.frequency.setValueAtTime(350, now);
+            oscillator2.frequency.exponentialRampToValueAtTime(60, now + 0.4);
+
+            // Volume envelope
+            gainNode.gain.setValueAtTime(0.45, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+            oscillator1.start(now);
+            oscillator1.stop(now + 0.4);
+            oscillator2.start(now);
+            oscillator2.stop(now + 0.4);
+        }
+
         // Scale helper - converts relative values to actual pixels
         const scale = {
             x: (relativeValue) => canvas.width * relativeValue,
@@ -628,6 +769,9 @@
                 lifetime: 0  // Track how long projectile has existed
             });
 
+            // Play shoot sound
+            playShootSound();
+
             // Cooldown to prevent holding space from creating too many projectiles
             canShoot = false;
             setTimeout(() => canShoot = true, 200);  // 200ms cooldown
@@ -692,6 +836,7 @@
 
                         // Remove the hit asteroid
                         asteroids.splice(j, 1);
+                        playExplosionSound();
                         break;
                     }
                 }
@@ -780,6 +925,7 @@
                     if (distance < player.size + 0.006) {
                         lives--;
                         mevProjectiles.splice(i, 1);
+                        playPlayerDeathSound();
 
                         if (lives <= 0) {
                             gameOver = true;
@@ -824,6 +970,7 @@
 
                         mev = null;
                         mevProjectiles.length = 0;
+                        playEnemyDeathSound();
                     }
                 }
             }
@@ -911,6 +1058,7 @@
                 // Check if collision occurred
                 if (distance < player.size + asteroid.size) {
                     lives--;
+                    playPlayerDeathSound();
 
                     if (lives <= 0) {
                         gameOver = true;
@@ -1057,6 +1205,9 @@
 
         // Keyboard event listeners
         window.addEventListener('keydown', (e) => {
+            // Initialize audio on first interaction
+            initAudio();
+
             if (e.key in keys) {
                 keys[e.key] = true;
                 e.preventDefault(); // Prevent page scrolling
@@ -1139,6 +1290,8 @@
 
         shootButtonElement.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            // Initialize audio on first interaction
+            initAudio();
             touchControls.shootButton.active = true;
             touchControls.shootButton.identifier = e.changedTouches[0].identifier;
             shootButtonElement.classList.add('active');
