@@ -1025,6 +1025,16 @@
                         mev = null;
                         mevProjectiles.length = 0;
                         playEnemyDeathSound();
+
+                        // Prevent immediate level transition
+                        if (asteroids.length === 0) {
+                            levelTransition = true;
+                            setTimeout(() => {
+                                if (!gameOver) {
+                                    nextLevel();
+                                }
+                            }, 100);
+                        }
                     } else {
                         // MEV hit but not destroyed
                         playEnemyHitSound();
