@@ -497,6 +497,7 @@
         ];
 
         // Game state
+        let gameStarted = false;
         let gameOver = false;
         let paused = false;
         let lives = 3;
@@ -540,7 +541,56 @@
         }
 
         // Drawing function
+        // Draw start screen
+        function drawStartScreen() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Title
+            ctx.fillStyle = '#ffffff';
+            ctx.font = scale.size(0.08) + 'px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('VERUS BLASTER', canvas.width / 2, canvas.height * 0.2);
+
+            // Draw large player spaceship
+            const shipSize = scale.size(0.15);
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 2);  // Point upward
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(shipSize, 0);                    // Front point
+            ctx.lineTo(-shipSize, shipSize);            // Bottom back
+            ctx.lineTo(-shipSize, shipSize * 0.5);      // Bottom of cutout
+            ctx.lineTo(-shipSize * 0.7, 0);             // Center of cutout
+            ctx.lineTo(-shipSize, -shipSize * 0.5);     // Top of cutout
+            ctx.lineTo(-shipSize, -shipSize);           // Top back
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // Subtitle - line 1
+            ctx.font = scale.size(0.025) + 'px "Courier New", monospace';
+            ctx.fillText('An on-chain HTML5 Arcade Game', canvas.width / 2, canvas.height * 0.75);
+
+            // Subtitle - line 2
+            ctx.fillText('by Tommy Faldt Pedersen', canvas.width / 2, canvas.height * 0.8);
+
+            // Instruction
+            ctx.font = scale.size(0.03) + 'px "Courier New", monospace';
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            const startText = isTouchDevice ? 'Tap to Start' : 'Press Any Key to Start';
+            ctx.fillText(startText, canvas.width / 2, canvas.height * 0.9);
+        }
+
         function draw() {
+            // Show start screen if game hasn't started
+            if (!gameStarted) {
+                drawStartScreen();
+                return;
+            }
+
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1300,6 +1350,13 @@
             // Initialize audio on first interaction
             initAudio();
 
+            // Start game on any key press if not started
+            if (!gameStarted) {
+                gameStarted = true;
+                e.preventDefault();
+                return;
+            }
+
             if (e.key in keys) {
                 keys[e.key] = true;
                 e.preventDefault(); // Prevent page scrolling
@@ -1429,6 +1486,14 @@
 
         // Canvas tap to restart game (mobile)
         canvas.addEventListener('touchstart', (e) => {
+            // Start game on tap if not started
+            if (!gameStarted) {
+                e.preventDefault();
+                initAudio();
+                gameStarted = true;
+                return;
+            }
+
             if (gameOver) {
                 e.preventDefault();
                 resetGame();
@@ -1442,8 +1507,8 @@
             lastTime = currentTime;
             const timeScale = deltaTime / targetFrameTime;
 
-            // Only update if time scale is reasonable (prevent huge jumps) and not paused
-            if (!paused && timeScale > 0 && timeScale < 3) {
+            // Only update if game has started, time scale is reasonable (prevent huge jumps) and not paused
+            if (gameStarted && !paused && timeScale > 0 && timeScale < 3) {
                 updatePlayer(timeScale);
                 updateProjectiles(timeScale);
                 updateAsteroids(timeScale);
