@@ -207,187 +207,211 @@
 
         // Play shoot sound effect
         function playShootSound() {
-            if (!audioContext) return;
+            try {
+                if (!audioContext) return;
 
-            const now = audioContext.currentTime;
+                const now = audioContext.currentTime;
 
-            // Create oscillator for laser sound
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+                // Create oscillator for laser sound
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Laser sound: start high, drop quickly
-            oscillator.frequency.setValueAtTime(800, now);
-            oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+                // Laser sound: start high, drop quickly
+                oscillator.frequency.setValueAtTime(800, now);
+                oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
 
-            // Volume envelope
-            gainNode.gain.setValueAtTime(0.3, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                // Volume envelope
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
 
-            oscillator.start(now);
-            oscillator.stop(now + 0.1);
+                oscillator.start(now);
+                oscillator.stop(now + 0.1);
+            } catch (e) {
+                console.error('Error playing shoot sound:', e);
+            }
         }
 
         // Play explosion sound effect
         function playExplosionSound() {
-            if (!audioContext) return;
+            try {
+                if (!audioContext) return;
 
-            const now = audioContext.currentTime;
+                const now = audioContext.currentTime;
 
-            // Create noise-like explosion using multiple oscillators
-            const oscillator1 = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+                // Create noise-like explosion using multiple oscillators
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator1.connect(gainNode);
-            oscillator2.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Explosion sound: low rumble that decays
-            oscillator1.type = 'sawtooth';
-            oscillator2.type = 'square';
-            oscillator1.frequency.setValueAtTime(120, now);
-            oscillator1.frequency.exponentialRampToValueAtTime(40, now + 0.3);
-            oscillator2.frequency.setValueAtTime(80, now);
-            oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+                // Explosion sound: low rumble that decays
+                oscillator1.type = 'sawtooth';
+                oscillator2.type = 'square';
+                oscillator1.frequency.setValueAtTime(120, now);
+                oscillator1.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+                oscillator2.frequency.setValueAtTime(80, now);
+                oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.3);
 
-            // Volume envelope with quick attack and decay
-            gainNode.gain.setValueAtTime(0.4, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                // Volume envelope with quick attack and decay
+                gainNode.gain.setValueAtTime(0.4, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
 
-            oscillator1.start(now);
-            oscillator1.stop(now + 0.3);
-            oscillator2.start(now);
-            oscillator2.stop(now + 0.3);
+                oscillator1.start(now);
+                oscillator1.stop(now + 0.3);
+                oscillator2.start(now);
+                oscillator2.stop(now + 0.3);
+            } catch (e) {
+                console.error('Error playing explosion sound:', e);
+            }
         }
 
         // Play enemy hit sound effect
         function playEnemyHitSound() {
-            if (!audioContext) return;
+            try {
+                if (!audioContext) return;
 
-            const now = audioContext.currentTime;
+                const now = audioContext.currentTime;
 
-            // Create sharp metallic hit sound
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+                // Create sharp metallic hit sound
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Quick metallic ping
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(1200, now);
-            oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                // Quick metallic ping
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(1200, now);
+                oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.05);
 
-            // Short sharp volume envelope
-            gainNode.gain.setValueAtTime(0.3, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                // Short sharp volume envelope
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
 
-            oscillator.start(now);
-            oscillator.stop(now + 0.05);
+                oscillator.start(now);
+                oscillator.stop(now + 0.05);
+            } catch (e) {
+                console.error('Error playing enemy hit sound:', e);
+            }
         }
 
         // Play level complete triumph sound
         function playTriumphSound() {
-            if (!audioContext) return;
+            try {
+                if (!audioContext) return;
 
-            const now = audioContext.currentTime;
+                const now = audioContext.currentTime;
 
-            // Create uplifting victory melody
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+                // Create uplifting victory melody
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Victory ascending tones
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(262, now);        // C4
-            oscillator.frequency.setValueAtTime(330, now + 0.1);  // E4
-            oscillator.frequency.setValueAtTime(392, now + 0.2);  // G4
+                // Victory ascending tones
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(262, now);        // C4
+                oscillator.frequency.setValueAtTime(330, now + 0.1);  // E4
+                oscillator.frequency.setValueAtTime(392, now + 0.2);  // G4
 
-            // Volume envelope
-            gainNode.gain.setValueAtTime(0.3, now);
-            gainNode.gain.setValueAtTime(0.3, now + 0.2);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                // Volume envelope
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.setValueAtTime(0.3, now + 0.2);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
 
-            oscillator.start(now);
-            oscillator.stop(now + 0.4);
+                oscillator.start(now);
+                oscillator.stop(now + 0.4);
+            } catch (e) {
+                console.error('Error playing triumph sound:', e);
+            }
         }
 
         // Play player death sound effect
         function playPlayerDeathSound() {
-            if (!audioContext) return;
+            try {
+                if (!audioContext) return;
 
-            const now = audioContext.currentTime;
+                const now = audioContext.currentTime;
 
-            // Create dramatic crash sound for player
-            const oscillator1 = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
-            const oscillator3 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+                // Create dramatic crash sound for player
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const oscillator3 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator1.connect(gainNode);
-            oscillator2.connect(gainNode);
-            oscillator3.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                oscillator3.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Harsh crash with multiple frequencies
-            oscillator1.type = 'sawtooth';
-            oscillator2.type = 'square';
-            oscillator3.type = 'triangle';
-            oscillator1.frequency.setValueAtTime(300, now);
-            oscillator1.frequency.exponentialRampToValueAtTime(50, now + 0.5);
-            oscillator2.frequency.setValueAtTime(180, now);
-            oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.5);
-            oscillator3.frequency.setValueAtTime(450, now);
-            oscillator3.frequency.exponentialRampToValueAtTime(60, now + 0.5);
+                // Harsh crash with multiple frequencies
+                oscillator1.type = 'sawtooth';
+                oscillator2.type = 'square';
+                oscillator3.type = 'triangle';
+                oscillator1.frequency.setValueAtTime(300, now);
+                oscillator1.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+                oscillator2.frequency.setValueAtTime(180, now);
+                oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+                oscillator3.frequency.setValueAtTime(450, now);
+                oscillator3.frequency.exponentialRampToValueAtTime(60, now + 0.5);
 
-            // Volume envelope
-            gainNode.gain.setValueAtTime(0.5, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                // Volume envelope
+                gainNode.gain.setValueAtTime(0.5, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
 
-            oscillator1.start(now);
-            oscillator1.stop(now + 0.5);
-            oscillator2.start(now);
-            oscillator2.stop(now + 0.5);
-            oscillator3.start(now);
-            oscillator3.stop(now + 0.5);
+                oscillator1.start(now);
+                oscillator1.stop(now + 0.5);
+                oscillator2.start(now);
+                oscillator2.stop(now + 0.5);
+                oscillator3.start(now);
+                oscillator3.stop(now + 0.5);
+            } catch (e) {
+                console.error('Error playing player death sound:', e);
+            }
         }
 
         // Play enemy death sound effect
         function playEnemyDeathSound() {
-            if (!audioContext) return;
+            try {
+                if (!audioContext) return;
 
-            const now = audioContext.currentTime;
+                const now = audioContext.currentTime;
 
-            // Create metallic explosion for enemy
-            const oscillator1 = audioContext.createOscillator();
-            const oscillator2 = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
+                // Create metallic explosion for enemy
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
 
-            oscillator1.connect(gainNode);
-            oscillator2.connect(gainNode);
-            gainNode.connect(audioContext.destination);
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
-            // Higher pitched metallic sound
-            oscillator1.type = 'square';
-            oscillator2.type = 'sawtooth';
-            oscillator1.frequency.setValueAtTime(600, now);
-            oscillator1.frequency.exponentialRampToValueAtTime(100, now + 0.4);
-            oscillator2.frequency.setValueAtTime(350, now);
-            oscillator2.frequency.exponentialRampToValueAtTime(60, now + 0.4);
+                // Higher pitched metallic sound
+                oscillator1.type = 'square';
+                oscillator2.type = 'sawtooth';
+                oscillator1.frequency.setValueAtTime(600, now);
+                oscillator1.frequency.exponentialRampToValueAtTime(100, now + 0.4);
+                oscillator2.frequency.setValueAtTime(350, now);
+                oscillator2.frequency.exponentialRampToValueAtTime(60, now + 0.4);
 
-            // Volume envelope
-            gainNode.gain.setValueAtTime(0.45, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                // Volume envelope
+                gainNode.gain.setValueAtTime(0.45, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
 
-            oscillator1.start(now);
-            oscillator1.stop(now + 0.4);
-            oscillator2.start(now);
-            oscillator2.stop(now + 0.4);
+                oscillator1.start(now);
+                oscillator1.stop(now + 0.4);
+                oscillator2.start(now);
+                oscillator2.stop(now + 0.4);
+            } catch (e) {
+                console.error('Error playing enemy death sound:', e);
+            }
         }
 
         // Scale helper - converts relative values to actual pixels
