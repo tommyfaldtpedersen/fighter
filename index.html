@@ -414,6 +414,38 @@
             }
         }
 
+        // Play extra life sound effect
+        function playExtraLifeSound() {
+            try {
+                if (!audioContext) return;
+
+                const now = audioContext.currentTime;
+
+                // Create uplifting power-up sound
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // Ascending notes for power-up feeling
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(440, now);        // A4
+                oscillator.frequency.setValueAtTime(554, now + 0.08); // C#5
+                oscillator.frequency.setValueAtTime(659, now + 0.16); // E5
+
+                // Volume envelope
+                gainNode.gain.setValueAtTime(0.25, now);
+                gainNode.gain.setValueAtTime(0.25, now + 0.16);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.3);
+            } catch (e) {
+                console.error('Error playing extra life sound:', e);
+            }
+        }
+
         // Scale helper - converts relative values to actual pixels
         const scale = {
             x: (relativeValue) => canvas.width * relativeValue,
@@ -514,7 +546,8 @@
         const targetFrameTime = 1000 / targetFPS;
 
         // MEV enemy
-        let mev = null;  // Will be spawned every 3 levels
+        let mevEnemies = [];  // Array to hold multiple MEV enemies
+        let mevDefeats = 0;    // Track how many MEVs have been defeated
         const mevProjectiles = [];
         let mevShootCooldown = 0;
         // Resize canvas to fit viewport while maintaining aspect ratio
@@ -598,7 +631,7 @@
             drawAsteroids();
 
             // Draw MEV enemy and its projectiles
-            if (mev) {
+            if (mevEnemies.length > 0) {
                 drawMEV();
                 drawMEVProjectiles();
             }
@@ -748,57 +781,57 @@
 
         // Draw MEV enemy
         function drawMEV() {
-            if (!mev) return;
+            mevEnemies.forEach(mev => {
+                const x = scale.x(mev.x);
+                const y = scale.y(mev.y);
+                const size = scale.size(mev.size);
 
-            const x = scale.x(mev.x);
-            const y = scale.y(mev.y);
-            const size = scale.size(mev.size);
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(mev.rotation);
 
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(mev.rotation);
+                // Draw MEV body (hexagon with rounded corners)
+                ctx.fillStyle = '#e5e7e7';
+                ctx.beginPath();
 
-            // Draw MEV body (hexagon with rounded corners)
-            ctx.fillStyle = '#e5e7e7';
-            ctx.beginPath();
+                // Create hexagon points
+                const radius = size;
+                const cornerRadius = size * 0.15;
 
-            // Create hexagon points
-            const radius = size;
-            const cornerRadius = size * 0.15;
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI / 3) * i - Math.PI / 2; // Start from top
+                    const nextAngle = (Math.PI / 3) * (i + 1) - Math.PI / 2;
 
-            for (let i = 0; i < 6; i++) {
-                const angle = (Math.PI / 3) * i - Math.PI / 2; // Start from top
-                const nextAngle = (Math.PI / 3) * (i + 1) - Math.PI / 2;
+                    const x1 = Math.cos(angle) * radius;
+                    const y1 = Math.sin(angle) * radius;
+                    const x2 = Math.cos(nextAngle) * radius;
+                    const y2 = Math.sin(nextAngle) * radius;
 
-                const x1 = Math.cos(angle) * radius;
-                const y1 = Math.sin(angle) * radius;
-                const x2 = Math.cos(nextAngle) * radius;
-                const y2 = Math.sin(nextAngle) * radius;
+                    if (i === 0) {
+                        ctx.moveTo(x1, y1);
+                    }
 
-                if (i === 0) {
-                    ctx.moveTo(x1, y1);
+                    // Draw line to next point with rounded corner
+                    ctx.arcTo(x2, y2,
+                        Math.cos(nextAngle + Math.PI / 3) * radius,
+                        Math.sin(nextAngle + Math.PI / 3) * radius,
+                        cornerRadius);
                 }
+                ctx.closePath();
+                ctx.fill();
 
-                // Draw line to next point with rounded corner
-                ctx.arcTo(x2, y2,
-                    Math.cos(nextAngle + Math.PI / 3) * radius,
-                    Math.sin(nextAngle + Math.PI / 3) * radius,
-                    cornerRadius);
-            }
-            ctx.closePath();
-            ctx.fill();
+                // Draw MEV text (rotated -90 degrees to be upright)
+                ctx.save();
+                ctx.rotate(-Math.PI / 2);  // Rotate text 90 degrees counter-clockwise
+                ctx.fillStyle = '#000000';
+                ctx.font = scale.size(0.0225) + 'px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('MEV', 0, 0);
+                ctx.restore();
 
-            // Draw MEV text (rotated -90 degrees to be upright)
-            ctx.save();
-            ctx.rotate(-Math.PI / 2);  // Rotate text 90 degrees counter-clockwise
-            ctx.fillStyle = '#000000';
-            ctx.font = scale.size(0.0225) + 'px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('MEV', 0, 0);
-            ctx.restore();
-
-            ctx.restore();
+                ctx.restore();
+            });
         }
 
         // Draw MEV projectiles
@@ -939,6 +972,7 @@
                         if (score >= nextLifeAt) {
                             lives++;
                             nextLifeAt += 5000;
+                            playExtraLifeSound();
                         }
 
                         // Split asteroid if it's large enough
@@ -996,32 +1030,42 @@
 
         // Update MEV enemy
         function updateMEV(timeScale = 1) {
-            if (!mev) return;
+            mevEnemies.forEach(mev => {
+                // Move MEV like an asteroid (straight line)
+                mev.x += mev.velocityX * timeScale;
+                mev.y += mev.velocityY * timeScale;
 
-            // Move MEV like an asteroid (straight line)
-            mev.x += mev.velocityX * timeScale;
-            mev.y += mev.velocityY * timeScale;
+                // Wrap around screen edges
+                if (mev.x < -mev.size) mev.x = 1 + mev.size;
+                if (mev.x > 1 + mev.size) mev.x = -mev.size;
+                if (mev.y < -mev.size) mev.y = 1 + mev.size;
+                if (mev.y > 1 + mev.size) mev.y = -mev.size;
 
-            // Wrap around screen edges
-            if (mev.x < -mev.size) mev.x = 1 + mev.size;
-            if (mev.x > 1 + mev.size) mev.x = -mev.size;
-            if (mev.y < -mev.size) mev.y = 1 + mev.size;
-            if (mev.y > 1 + mev.size) mev.y = -mev.size;
+                // Rotate to face player
+                const angleToPlayer = Math.atan2(player.y - mev.y, player.x - mev.x);
+                mev.rotation = angleToPlayer;
 
-            // Rotate to face player
-            const angleToPlayer = Math.atan2(player.y - mev.y, player.x - mev.x);
-            mev.rotation = angleToPlayer;
-
-            // Shooting logic (slower pace)
-            mevShootCooldown -= timeScale;
-            if (mevShootCooldown <= 0 && Math.random() < 0.01) {  // Half the shooting probability
-                mevShoot();
-                mevShootCooldown = 120 + Math.random() * 240;  // 2-6 seconds between shots (doubled)
-            }
+                // Individual shooting logic
+                mev.shootCooldown -= timeScale;
+                if (mev.shootCooldown <= 0 && Math.random() < 0.01) {
+                    // This MEV shoots
+                    const projectileSpeed = 0.006;
+                    mevProjectiles.push({
+                        x: mev.x,
+                        y: mev.y,
+                        velocityX: Math.cos(mev.rotation) * projectileSpeed,
+                        velocityY: Math.sin(mev.rotation) * projectileSpeed,
+                        lifetime: 0
+                    });
+                    mev.shootCooldown = 120 + Math.random() * 240;  // 2-6 seconds between shots
+                }
+            });
         }
 
         // MEV shoots
         function mevShoot() {
+            // Random MEV shoots
+            const mev = mevEnemies[Math.floor(Math.random() * mevEnemies.length)];
             if (!mev) return;
 
             const projectileSpeed = 0.006;
@@ -1073,48 +1117,57 @@
 
         // Check collision between player projectiles and MEV
         function checkMEVCollision() {
-            if (!mev) return;
+            if (mevEnemies.length === 0) return;
 
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const proj = projectiles[i];
-                const dx = proj.x - mev.x;
-                const dy = proj.y - mev.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                let hitMEV = false;
 
-                if (distance < mev.size) {
-                    // MEV hit
-                    mev.health--;
-                    projectiles.splice(i, 1);
+                for (let m = mevEnemies.length - 1; m >= 0; m--) {
+                    const mev = mevEnemies[m];
+                    const dx = proj.x - mev.x;
+                    const dy = proj.y - mev.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    if (mev.health <= 0) {
-                        // MEV destroyed
-                        score += 500;  // Bonus points for destroying MEV
+                    if (distance < mev.size) {
+                        // MEV hit
+                        mev.health--;
+                        projectiles.splice(i, 1);
+                        hitMEV = true;
 
-                        // Check for extra life milestone
-                        if (score >= nextLifeAt) {
-                            lives++;
-                            nextLifeAt += 5000;
+                        if (mev.health <= 0) {
+                            // MEV destroyed
+                            mevEnemies.splice(m, 1);
+                            mevDefeats++;
+                            score += 500;  // Bonus points for destroying MEV
+
+                            // Check for extra life milestone
+                            if (score >= nextLifeAt) {
+                                lives++;
+                                nextLifeAt += 5000;
+                                playExtraLifeSound();
+                            }
+
+                            playEnemyDeathSound();
+
+                            // Prevent immediate level transition if all enemies cleared
+                            if (asteroids.length === 0 && mevEnemies.length === 0) {
+                                levelTransition = true;
+                                setTimeout(() => {
+                                    if (!gameOver) {
+                                        nextLevel();
+                                    }
+                                }, 100);
+                            }
+                        } else {
+                            // MEV hit but not destroyed
+                            playEnemyHitSound();
                         }
-
-                        mev = null;
-                        mevProjectiles.length = 0;
-                        playEnemyDeathSound();
-
-                        // Prevent immediate level transition
-                        if (asteroids.length === 0) {
-                            levelTransition = true;
-                            setTimeout(() => {
-                                if (!gameOver) {
-                                    nextLevel();
-                                }
-                            }, 100);
-                        }
-                        break;  // Exit loop after MEV is destroyed
-                    } else {
-                        // MEV hit but not destroyed
-                        playEnemyHitSound();
+                        break;
                     }
                 }
+
+                if (hitMEV) break;
             }
         }
 
@@ -1128,18 +1181,23 @@
 
             // Spawn MEV enemy every 3 levels
             if (level % 3 === 0) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 0.0004 + (Math.random() * 0.0002);  // Same speed as asteroids
-                mev = {
-                    x: Math.random(),
-                    y: Math.random(),
-                    velocityX: Math.cos(angle) * speed,
-                    velocityY: Math.sin(angle) * speed,
-                    rotation: 0,
-                    size: 0.04,
-                    health: 5  // Takes 5 hits to destroy
-                };
-                mevShootCooldown = 60;
+                // Calculate how many MEVs to spawn (1 + number of times we've defeated 3 MEVs)
+                const mevsToSpawn = 1 + Math.floor(mevDefeats / 3);
+
+                for (let m = 0; m < mevsToSpawn; m++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 0.0004 + (Math.random() * 0.0002);  // Same speed as asteroids
+                    mevEnemies.push({
+                        x: Math.random(),
+                        y: Math.random(),
+                        velocityX: Math.cos(angle) * speed,
+                        velocityY: Math.sin(angle) * speed,
+                        rotation: 0,
+                        size: 0.04,
+                        health: 5,  // Takes 5 hits to destroy
+                        shootCooldown: 60 + Math.random() * 120  // Individual shooting cooldown
+                    });
+                }
             }
 
             // Calculate number of asteroids to spawn (increases every 3 levels)
@@ -1237,7 +1295,8 @@
             invincibleTimer = 0;
             levelTransition = false;
             projectiles.length = 0;
-            mev = null;
+            mevEnemies.length = 0;
+            mevDefeats = 0;
             mevProjectiles.length = 0;
             mevShootCooldown = 0;
 
@@ -1520,7 +1579,7 @@
 
                 // Check if level is complete
                 // Wait for all asteroids to be destroyed, and if MEV exists, wait for it too
-                if (!gameOver && !levelTransition && asteroids.length === 0 && mev === null) {
+                if (!gameOver && !levelTransition && asteroids.length === 0 && mevEnemies.length === 0) {
                     nextLevel();
                 }
             }
