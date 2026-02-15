@@ -500,6 +500,31 @@
         const joystickHandleRadius = 25;
         const shootButtonRadius = 40;
 
+        // Gamepad support
+        let gamepadIndex = null;
+        let lastShootButtonState = false;
+
+        // Poll for gamepad connection
+        window.addEventListener('gamepadconnected', (e) => {
+            console.log('Gamepad connected:', e.gamepad.id);
+            gamepadIndex = e.gamepad.index;
+        });
+
+        window.addEventListener('gamepaddisconnected', (e) => {
+            console.log('Gamepad disconnected');
+            if (gamepadIndex === e.gamepad.index) {
+                gamepadIndex = null;
+            }
+        });
+
+        // Get gamepad input
+        function getGamepadInput() {
+            if (gamepadIndex === null) return null;
+
+            const gamepads = navigator.getGamepads();
+            return gamepads[gamepadIndex];
+        }
+
         // Projectiles array
         const projectiles = [];
         let canShoot = true;  // Shooting cooldown flag
@@ -1338,13 +1363,48 @@
                 }
             }
 
-            // Shooting (keyboard or touch)
-            if (keys[' '] || touchControls.shootButton.active) {
+            // Shooting (keyboard, touch, or gamepad)
+            const gamepad = getGamepadInput();
+            const gamepadShoot = gamepad && (gamepad.buttons[0].pressed || gamepad.buttons[1].pressed || gamepad.buttons[7].pressed); // A/B button or right trigger
+
+            if (keys[' '] || touchControls.shootButton.active || gamepadShoot) {
                 shoot();
             }
 
+            // Check for gamepad input
+            let usingGamepad = false;
+            if (gamepad) {
+                const leftStickX = gamepad.axes[0];
+                const leftStickY = gamepad.axes[1];
+                const deadzone = 0.15;
+
+                // Check if left stick is being used
+                if (Math.abs(leftStickX) > deadzone || Math.abs(leftStickY) > deadzone) {
+                    usingGamepad = true;
+
+                    // Use left stick for movement like joystick
+                    const angle = Math.atan2(leftStickY, leftStickX);
+                    const magnitude = Math.sqrt(leftStickX * leftStickX + leftStickY * leftStickY);
+                    const targetRotation = angle;
+
+                    // Smoothly rotate toward stick direction
+                    let rotationDiff = targetRotation - player.rotation;
+                    while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+                    while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+
+                    if (Math.abs(rotationDiff) > 0.05) {
+                        player.rotation += Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
+                    }
+
+                    // Thrust based on stick magnitude
+                    const thrustAmount = Math.min(magnitude, 1);
+                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount;
+                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount;
+                }
+            }
+
             // Handle touch joystick input
-            if (touchControls.joystick.active) {
+            if (!usingGamepad && touchControls.joystick.active) {
                 const dx = touchControls.joystick.currentX - touchControls.joystick.startX;
                 const dy = touchControls.joystick.currentY - touchControls.joystick.startY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1368,8 +1428,8 @@
                     player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
                     player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
                 }
-            } else {
-                // Keyboard rotation
+            } else if (!usingGamepad) {
+                // Keyboard rotation (only if not using gamepad)
                 if (keys.ArrowLeft || keys['a']) {
                     player.rotation -= player.rotationSpeed * timeScale;
                 }
