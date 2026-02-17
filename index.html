@@ -481,6 +481,9 @@
             ' ': false  // Space key
         };
 
+        // Track if gamepad is currently thrusting for visual effect
+        let gamepadThrusting = false;
+
         // Touch controls
         const touchControls = {
             joystick: {
@@ -717,7 +720,7 @@
             ctx.fill();
 
             // Draw thrust flame when accelerating
-            if (keys.ArrowUp || keys['w']) {
+            if (keys.ArrowUp || keys['w'] || gamepadThrusting) {
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.moveTo(-size * 0.7, size * 0.5);   // Start from cutout edge (top)
@@ -1434,6 +1437,9 @@
         function updatePlayer(timeScale = 1) {
             if (gameOver) return;
 
+            // Reset gamepad thrust flag each frame
+            gamepadThrusting = false;
+
             // Update invincibility timer
             if (invincible) {
                 invincibleTimer -= timeScale;
@@ -1444,7 +1450,8 @@
 
             // Shooting (keyboard, touch, or gamepad)
             const gamepad = getGamepadInput();
-            const gamepadShoot = gamepad && (gamepad.buttons[0].pressed || gamepad.buttons[1].pressed || gamepad.buttons[7].pressed); // A/B button or right trigger
+            // PS3: Square=button 2, L2=button 6, right trigger=button 7
+            const gamepadShoot = gamepad && (gamepad.buttons[0].pressed || gamepad.buttons[2].pressed || gamepad.buttons[7].pressed);
 
             if (keys[' '] || touchControls.shootButton.active || gamepadShoot) {
                 shoot();
@@ -1479,6 +1486,15 @@
                     const thrustAmount = Math.min(magnitude, 1);
                     player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount;
                     player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount;
+
+                    // Track if thrusting for visual effect
+                    gamepadThrusting = thrustAmount > 0.3;
+                }
+
+                // L2 button (button 6) or Circle (button 1) for braking on PS3 controller
+                if (gamepad.buttons[6].pressed || gamepad.buttons[1].pressed) {
+                    player.velocityX *= Math.pow(player.brakeForce, timeScale);
+                    player.velocityY *= Math.pow(player.brakeForce, timeScale);
                 }
             }
 
@@ -1506,6 +1522,9 @@
                     const thrustAmount = Math.min(distance / joystickRadius, 1);
                     player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
                     player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
+
+                    // Track if thrusting for visual effect
+                    gamepadThrusting = thrustAmount > 0.3;
                 }
             } else if (!usingGamepad) {
                 // Keyboard rotation (only if not using gamepad)
