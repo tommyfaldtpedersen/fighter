@@ -15,7 +15,7 @@
         window.addEventListener('message', (event) => {
             // Optionally, check event.origin for security
             if (event.data && event.data.type === 'GAME_UPDATE') {
-                const { game, lives, level, score, gameduration } = event.data;
+                const { game, lives, level, score } = event.data;
                 document.getElementById('game-stats').innerHTML = `
           <strong>Game:</strong> ${game}<br>
           <strong>Lives:</strong> ${lives}<br>
