@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Page - Verus Blaster Integration</title>
+</head>
+
+<body>
+    <h1>Verus Blaster Embedded</h1>
+    <iframe id="game-frame" src="./index.html" width="800" height="600" style="border:2px solid #333;"></iframe>
+    <div id="game-stats" style="margin-top:20px;"></div>
+    <script>
+        window.addEventListener('message', (event) => {
+            // Optionally, check event.origin for security
+            if (event.data && event.data.type === 'GAME_UPDATE') {
+                const { game, lives, level, score, gameduration } = event.data;
+                document.getElementById('game-stats').innerHTML = `
+          <strong>Game:</strong> ${game}<br>
+          <strong>Lives:</strong> ${lives}<br>
+          <strong>Level:</strong> ${level}<br>
+          <strong>Score:</strong> ${score}<br>
+        `;
+            }
+        });
+    </script>
+</body>
+
+</html>

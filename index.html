@@ -993,11 +993,29 @@
                             score += 25;   // Small asteroid
                         }
 
+                        // Notify parent of game state update
+                        window.parent.postMessage({
+                            type: 'GAME_UPDATE',
+                            game: 'Verus Blaster',
+                            lives: lives,
+                            level: level,
+                            score: score
+                        }, '*');
+
                         // Check for extra life milestone
                         if (score >= nextLifeAt) {
                             lives++;
                             nextLifeAt += 5000;
                             playExtraLifeSound();
+
+                            // Notify parent of game state update
+                            window.parent.postMessage({
+                                type: 'GAME_UPDATE',
+                                game: 'Verus Blaster',
+                                lives: lives,
+                                level: level,
+                                score: score
+                            }, '*');
                         }
 
                         // Split asteroid if it's large enough
@@ -1124,6 +1142,15 @@
                         mevProjectiles.splice(i, 1);
                         playPlayerDeathSound();
 
+                        // Notify parent of game state update
+                        window.parent.postMessage({
+                            type: 'GAME_UPDATE',
+                            game: 'Verus Blaster',
+                            lives: lives,
+                            level: level,
+                            score: score
+                        }, '*');
+
                         if (lives <= 0) {
                             gameOver = true;
                         } else {
@@ -1171,6 +1198,15 @@
                                 lives++;
                                 nextLifeAt += 5000;
                                 playExtraLifeSound();
+
+                                // Notify parent of game state update
+                                window.parent.postMessage({
+                                    type: 'GAME_UPDATE',
+                                    game: 'Verus Blaster',
+                                    lives: lives,
+                                    level: level,
+                                    score: score
+                                }, '*');
                             }
 
                             playEnemyDeathSound();
@@ -1203,6 +1239,15 @@
             levelTransition = true;  // Set flag to prevent multiple calls
             level++;
             playTriumphSound();
+
+            // Notify parent of game state update
+            window.parent.postMessage({
+                type: 'GAME_UPDATE',
+                game: 'Verus Blaster',
+                lives: lives,
+                level: level,
+                score: score
+            }, '*');
 
             // Spawn MEV enemy every 3 levels
             if (level % 3 === 0) {
@@ -1286,6 +1331,15 @@
                     lives--;
                     playPlayerDeathSound();
 
+                    // Notify parent of game state update
+                    window.parent.postMessage({
+                        type: 'GAME_UPDATE',
+                        game: 'Verus Blaster',
+                        lives: lives,
+                        level: level,
+                        score: score
+                    }, '*');
+
                     if (lives <= 0) {
                         gameOver = true;
                     } else {
@@ -1318,6 +1372,15 @@
             nextLifeAt = 5000;
             invincible = false;
             invincibleTimer = 0;
+
+            // Notify parent of game state update
+            window.parent.postMessage({
+                type: 'GAME_UPDATE',
+                game: 'Verus Blaster',
+                lives: lives,
+                level: level,
+                score: score
+            }, '*');
             levelTransition = false;
             projectiles.length = 0;
             mevEnemies.length = 0;
