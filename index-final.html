@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Verus Blaster</title>
     <style>
         * {
@@ -35,7 +35,7 @@
             border: 2px solid #fff;
             background-color: #050a0f;
             max-width: 100%;
-            max-height: 100vh;
+            max-height: 70vh;
             display: block;
         }
 
@@ -111,7 +111,7 @@
 
         .shoot-button::before,
         .shoot-button::after {
-            content: '';
+            content: "";
             position: absolute;
             background-color: rgba(255, 255, 255, 0.6);
         }
@@ -163,7 +163,7 @@
 
         .pause-icon::before,
         .pause-icon::after {
-            content: '';
+            content: "";
             width: 6px;
             height: 24px;
             background-color: rgba(255, 255, 255, 0.6);
@@ -190,182 +190,124 @@
             <div class="shoot-button" id="shoot-button"></div>
         </div>
     </div>
-
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Audio context for sound effects
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
         let audioContext = null;
-
-        // Initialize audio context on first user interaction
         function initAudio() {
             if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext = new (
+                    window.AudioContext || window.webkitAudioContext
+                )();
             }
         }
-
-        // Play shoot sound effect
         function playShootSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create oscillator for laser sound
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Laser sound: start high, drop quickly
                 oscillator.frequency.setValueAtTime(800, now);
                 oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
-
-                // Volume envelope
                 gainNode.gain.setValueAtTime(0.3, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-
                 oscillator.start(now);
                 oscillator.stop(now + 0.1);
             } catch (e) {
-                console.error('Error playing shoot sound:', e);
+                console.error("Error playing shoot sound:", e);
             }
         }
-
-        // Play explosion sound effect
         function playExplosionSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create noise-like explosion using multiple oscillators
                 const oscillator1 = audioContext.createOscillator();
                 const oscillator2 = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator1.connect(gainNode);
                 oscillator2.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Explosion sound: low rumble that decays
-                oscillator1.type = 'sawtooth';
-                oscillator2.type = 'square';
+                oscillator1.type = "sawtooth";
+                oscillator2.type = "square";
                 oscillator1.frequency.setValueAtTime(120, now);
                 oscillator1.frequency.exponentialRampToValueAtTime(40, now + 0.3);
                 oscillator2.frequency.setValueAtTime(80, now);
                 oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.3);
-
-                // Volume envelope with quick attack and decay
                 gainNode.gain.setValueAtTime(0.4, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-
                 oscillator1.start(now);
                 oscillator1.stop(now + 0.3);
                 oscillator2.start(now);
                 oscillator2.stop(now + 0.3);
             } catch (e) {
-                console.error('Error playing explosion sound:', e);
+                console.error("Error playing explosion sound:", e);
             }
         }
-
-        // Play enemy hit sound effect
         function playEnemyHitSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create sharp metallic hit sound
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Quick metallic ping
-                oscillator.type = 'triangle';
+                oscillator.type = "triangle";
                 oscillator.frequency.setValueAtTime(1200, now);
                 oscillator.frequency.exponentialRampToValueAtTime(800, now + 0.05);
-
-                // Short sharp volume envelope
                 gainNode.gain.setValueAtTime(0.3, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-
                 oscillator.start(now);
                 oscillator.stop(now + 0.05);
             } catch (e) {
-                console.error('Error playing enemy hit sound:', e);
+                console.error("Error playing enemy hit sound:", e);
             }
         }
-
-        // Play level complete triumph sound
         function playTriumphSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create uplifting victory melody
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Victory ascending tones
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(262, now);        // C4
-                oscillator.frequency.setValueAtTime(330, now + 0.1);  // E4
-                oscillator.frequency.setValueAtTime(392, now + 0.2);  // G4
-
-                // Volume envelope
+                oscillator.type = "square";
+                oscillator.frequency.setValueAtTime(262, now);
+                oscillator.frequency.setValueAtTime(330, now + 0.1);
+                oscillator.frequency.setValueAtTime(392, now + 0.2);
                 gainNode.gain.setValueAtTime(0.3, now);
                 gainNode.gain.setValueAtTime(0.3, now + 0.2);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-
                 oscillator.start(now);
                 oscillator.stop(now + 0.4);
             } catch (e) {
-                console.error('Error playing triumph sound:', e);
+                console.error("Error playing triumph sound:", e);
             }
         }
-
-        // Play player death sound effect
         function playPlayerDeathSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create dramatic crash sound for player
                 const oscillator1 = audioContext.createOscillator();
                 const oscillator2 = audioContext.createOscillator();
                 const oscillator3 = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator1.connect(gainNode);
                 oscillator2.connect(gainNode);
                 oscillator3.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Harsh crash with multiple frequencies
-                oscillator1.type = 'sawtooth';
-                oscillator2.type = 'square';
-                oscillator3.type = 'triangle';
+                oscillator1.type = "sawtooth";
+                oscillator2.type = "square";
+                oscillator3.type = "triangle";
                 oscillator1.frequency.setValueAtTime(300, now);
                 oscillator1.frequency.exponentialRampToValueAtTime(50, now + 0.5);
                 oscillator2.frequency.setValueAtTime(180, now);
                 oscillator2.frequency.exponentialRampToValueAtTime(30, now + 0.5);
                 oscillator3.frequency.setValueAtTime(450, now);
                 oscillator3.frequency.exponentialRampToValueAtTime(60, now + 0.5);
-
-                // Volume envelope
                 gainNode.gain.setValueAtTime(0.5, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-
                 oscillator1.start(now);
                 oscillator1.stop(now + 0.5);
                 oscillator2.start(now);
@@ -373,118 +315,87 @@
                 oscillator3.start(now);
                 oscillator3.stop(now + 0.5);
             } catch (e) {
-                console.error('Error playing player death sound:', e);
+                console.error("Error playing player death sound:", e);
             }
         }
-
-        // Play enemy death sound effect
         function playEnemyDeathSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create metallic explosion for enemy
                 const oscillator1 = audioContext.createOscillator();
                 const oscillator2 = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator1.connect(gainNode);
                 oscillator2.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Higher pitched metallic sound
-                oscillator1.type = 'square';
-                oscillator2.type = 'sawtooth';
+                oscillator1.type = "square";
+                oscillator2.type = "sawtooth";
                 oscillator1.frequency.setValueAtTime(600, now);
                 oscillator1.frequency.exponentialRampToValueAtTime(100, now + 0.4);
                 oscillator2.frequency.setValueAtTime(350, now);
                 oscillator2.frequency.exponentialRampToValueAtTime(60, now + 0.4);
-
-                // Volume envelope
                 gainNode.gain.setValueAtTime(0.45, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-
                 oscillator1.start(now);
                 oscillator1.stop(now + 0.4);
                 oscillator2.start(now);
                 oscillator2.stop(now + 0.4);
             } catch (e) {
-                console.error('Error playing enemy death sound:', e);
+                console.error("Error playing enemy death sound:", e);
             }
         }
-
-        // Play extra life sound effect
         function playExtraLifeSound() {
             try {
                 if (!audioContext) return;
-
                 const now = audioContext.currentTime;
-
-                // Create uplifting power-up sound
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-
-                // Ascending notes for power-up feeling
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(440, now);        // A4
-                oscillator.frequency.setValueAtTime(554, now + 0.08); // C#5
-                oscillator.frequency.setValueAtTime(659, now + 0.16); // E5
-
-                // Volume envelope
+                oscillator.type = "square";
+                oscillator.frequency.setValueAtTime(440, now);
+                oscillator.frequency.setValueAtTime(554, now + 0.08);
+                oscillator.frequency.setValueAtTime(659, now + 0.16);
                 gainNode.gain.setValueAtTime(0.25, now);
                 gainNode.gain.setValueAtTime(0.25, now + 0.16);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-
                 oscillator.start(now);
                 oscillator.stop(now + 0.3);
             } catch (e) {
-                console.error('Error playing extra life sound:', e);
+                console.error("Error playing extra life sound:", e);
             }
         }
-
-        // Scale helper - converts relative values to actual pixels
         const scale = {
             x: (relativeValue) => canvas.width * relativeValue,
             y: (relativeValue) => canvas.height * relativeValue,
-            size: (relativeValue) => Math.min(canvas.width, canvas.height) * relativeValue
+            size: (relativeValue) =>
+                Math.min(canvas.width, canvas.height) * relativeValue,
         };
-
-        // Player spaceship with physics
         const player = {
-            x: 0.5,           // Center position
+            x: 0.5,
             y: 0.5,
-            velocityX: 0,     // Velocity in x direction
-            velocityY: 0,     // Velocity in y direction
-            rotation: 0,      // Angle in radians (0 = pointing right)
-            size: 0.03,       // Size relative to canvas
-            color: '#ffffff',
-            acceleration: 0.0002,  // Acceleration rate
-            rotationSpeed: 0.08,   // Rotation speed
-            friction: 0.98,        // Friction/drag (0.98 = 2% speed loss per frame)
-            brakeForce: 0.95       // Braking strength
+            velocityX: 0,
+            velocityY: 0,
+            rotation: 0,
+            size: 0.03,
+            color: "#ffffff",
+            acceleration: 0.0002,
+            rotationSpeed: 0.08,
+            friction: 0.98,
+            brakeForce: 0.95,
         };
-
-        // Keyboard state
         const keys = {
             ArrowUp: false,
             ArrowDown: false,
             ArrowLeft: false,
             ArrowRight: false,
-            'w': false,
-            's': false,
-            'a': false,
-            'd': false,
-            ' ': false  // Space key
+            w: false,
+            s: false,
+            a: false,
+            d: false,
+            " ": false,
         };
-
-        // Track if gamepad is currently thrusting for visual effect
         let gamepadThrusting = false;
-
-        // Touch controls
         const touchControls = {
             joystick: {
                 active: false,
@@ -492,48 +403,33 @@
                 startY: 0,
                 currentX: 0,
                 currentY: 0,
-                identifier: null
+                identifier: null,
             },
-            shootButton: {
-                active: false,
-                identifier: null
-            }
+            shootButton: { active: false, identifier: null },
         };
         const joystickRadius = 60;
         const joystickHandleRadius = 25;
         const shootButtonRadius = 40;
-
-        // Gamepad support
         let gamepadIndex = null;
         let lastShootButtonState = false;
-        let lastGamepadButtonStates = [];  // Track previous gamepad button states
-
-        // Poll for gamepad connection
-        window.addEventListener('gamepadconnected', (e) => {
-            console.log('Gamepad connected:', e.gamepad.id);
+        let lastGamepadButtonStates = [];
+        window.addEventListener("gamepadconnected", (e) => {
+            console.log("Gamepad connected:", e.gamepad.id);
             gamepadIndex = e.gamepad.index;
         });
-
-        window.addEventListener('gamepaddisconnected', (e) => {
-            console.log('Gamepad disconnected');
+        window.addEventListener("gamepaddisconnected", (e) => {
+            console.log("Gamepad disconnected");
             if (gamepadIndex === e.gamepad.index) {
                 gamepadIndex = null;
             }
         });
-
-        // Get gamepad input
         function getGamepadInput() {
             if (gamepadIndex === null) return null;
-
             const gamepads = navigator.getGamepads();
             return gamepads[gamepadIndex];
         }
-
-        // Projectiles array
         const projectiles = [];
-        let canShoot = true;  // Shooting cooldown flag
-
-        // Asteroids
+        let canShoot = true;
         const asteroids = [
             {
                 x: 0.3,
@@ -541,497 +437,408 @@
                 velocityX: 0.0005,
                 velocityY: 0.0003,
                 size: 0.06,
-                color: '#e5e7e7',
+                color: "#e5e7e7",
                 rotation: 0,
-                rotationSpeed: 0.02
+                rotationSpeed: 0.02,
             },
             {
                 x: 0.7,
                 y: 0.6,
                 velocityX: -0.0003,
                 velocityY: 0.0004,
-                size: 0.06,  // Same size as first asteroid
-                color: '#e5e7e7',
+                size: 0.06,
+                color: "#e5e7e7",
                 rotation: 0,
-                rotationSpeed: -0.015
-            }
+                rotationSpeed: -0.015,
+            },
         ];
-
-        // Game state
         let gameStarted = false;
         let gameOver = false;
         let paused = false;
         let lives = 3;
         let score = 0;
         let level = 1;
-        let nextLifeAt = 5000;  // Next score threshold for extra life
-        let invincible = false;  // Temporary invincibility after being hit
+        let nextLifeAt = 5000;
+        let invincible = false;
         let invincibleTimer = 0;
-        let levelTransition = false;  // Prevent multiple nextLevel calls
-
-        // Frame rate independent timing
+        let levelTransition = false;
         let lastTime = performance.now();
         const targetFPS = 60;
         const targetFrameTime = 1000 / targetFPS;
-
-        // MEV enemy
-        let mevEnemies = [];  // Array to hold multiple MEV enemies
-        let mevDefeats = 0;    // Track how many MEVs have been defeated
-        let mevIdCounter = 0;  // Counter for unique MEV IDs
+        let mevEnemies = [];
+        let mevDefeats = 0;
+        let mevIdCounter = 0;
         const mevProjectiles = [];
         let mevShootCooldown = 0;
-        // Resize canvas to fit viewport while maintaining aspect ratio
         function resizeCanvas() {
-            const aspectRatio = 4 / 3; // Change this to your preferred ratio (16/9, 4/3, etc.)
-            const maxWidth = window.innerWidth - 20; // 20px padding
+            const aspectRatio = 4 / 3;
+            const maxWidth = window.innerWidth - 20;
             const maxHeight = window.innerHeight - 20;
-
             let width = maxWidth;
             let height = width / aspectRatio;
-
-            // If height is too large, scale based on height instead
             if (height > maxHeight) {
                 height = maxHeight;
                 width = height * aspectRatio;
             }
-
-            // Set canvas resolution (actual pixels)
             canvas.width = width;
             canvas.height = height;
-
-            // Redraw your game here after resize
             draw();
         }
-
-        // Drawing function
-        // Draw start screen
         function drawStartScreen() {
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Title
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             ctx.font = scale.size(0.08) + 'px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('VERUS BLASTER', canvas.width / 2, canvas.height * 0.2);
-
-            // Draw large player spaceship
+            ctx.textAlign = "center";
+            ctx.fillText("VERUS BLASTER", canvas.width / 2, canvas.height * 0.2);
             const shipSize = scale.size(0.15);
             ctx.save();
             ctx.translate(canvas.width / 2, canvas.height / 2 - 40);
-            ctx.rotate(-3 * Math.PI / 4);  // Rotate 135 degrees
-
-            ctx.fillStyle = '#ffffff';
+            ctx.rotate((-3 * Math.PI) / 4);
+            ctx.fillStyle = "#ffffff";
             ctx.beginPath();
-            ctx.moveTo(shipSize, 0);                    // Front point
-            ctx.lineTo(-shipSize, shipSize);            // Bottom back
-            ctx.lineTo(-shipSize, shipSize * 0.5);      // Bottom of cutout
-            ctx.lineTo(-shipSize * 0.7, 0);             // Center of cutout
-            ctx.lineTo(-shipSize, -shipSize * 0.5);     // Top of cutout
-            ctx.lineTo(-shipSize, -shipSize);           // Top back
+            ctx.moveTo(shipSize, 0);
+            ctx.lineTo(-shipSize, shipSize);
+            ctx.lineTo(-shipSize, shipSize * 0.5);
+            ctx.lineTo(-shipSize * 0.7, 0);
+            ctx.lineTo(-shipSize, -shipSize * 0.5);
+            ctx.lineTo(-shipSize, -shipSize);
             ctx.closePath();
             ctx.fill();
             ctx.restore();
-
-            // Subtitle - line 1
             ctx.font = scale.size(0.025) + 'px "Courier New", monospace';
-            ctx.fillText('An Onchain HTML5 Arcade Game Running on the Verus Protocol', canvas.width / 2, canvas.height * 0.75);
-
-            // Subtitle - line 2
-            ctx.fillText('by Tommy Faldt Pedersen', canvas.width / 2, canvas.height * 0.8);
-
-            // Instruction
+            ctx.fillText(
+                "An Onchain HTML5 Arcade Game Running on the Verus Protocol",
+                canvas.width / 2,
+                canvas.height * 0.75,
+            );
+            ctx.fillText(
+                "by Tommy Faldt Pedersen",
+                canvas.width / 2,
+                canvas.height * 0.8,
+            );
             ctx.font = scale.size(0.03) + 'px "Courier New", monospace';
-            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            const startText = isTouchDevice ? 'Tap to Start' : 'Press Any Key or Press Controller Button to Start';
+            const isTouchDevice =
+                "ontouchstart" in window || navigator.maxTouchPoints > 0;
+            const startText = isTouchDevice
+                ? "Tap to Start"
+                : "Press Any Key or Press Controller Button to Start";
             ctx.fillText(startText, canvas.width / 2, canvas.height * 0.9);
         }
-
         function draw() {
-            // Show start screen if game hasn't started
             if (!gameStarted) {
                 drawStartScreen();
                 return;
             }
-
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw asteroids
             drawAsteroids();
-
-            // Draw MEV enemy and its projectiles
             if (mevEnemies.length > 0) {
                 drawMEV();
                 drawMEVProjectiles();
             }
-
-            // Draw projectiles
             drawProjectiles();
-
-            // Draw lives indicator
             drawLives();
-
-            // Draw level
             drawLevel();
-
-            // Draw score
             drawScore();
-
-            // Draw player spaceship as a triangle
             if (!gameOver) {
                 drawSpaceship();
             } else {
-                // Draw explosion effect
                 drawExplosion();
             }
-
-            // Draw pause screen overlay if paused
             if (paused && !gameOver) {
                 drawPauseScreen();
             }
         }
-
-        // Draw spaceship (triangle pointing in rotation direction)
         function drawSpaceship() {
-            // Blink effect when invincible
             if (invincible && Math.floor(Date.now() / 100) % 2 === 0) {
-                return;  // Don't draw ship every other 100ms
+                return;
             }
-
             const x = scale.x(player.x);
             const y = scale.y(player.y);
             const size = scale.size(player.size);
-
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(player.rotation);
-
-            // Draw triangle (spaceship) with cutout at back
             ctx.fillStyle = player.color;
             ctx.beginPath();
-            ctx.moveTo(size, 0);              // Front point
-            ctx.lineTo(-size, size);          // Bottom back
-            ctx.lineTo(-size, size * 0.5);    // Bottom of cutout
-            ctx.lineTo(-size * 0.7, 0);       // Center of cutout (not as deep as thrust)
-            ctx.lineTo(-size, -size * 0.5);   // Top of cutout
-            ctx.lineTo(-size, -size);         // Top back
+            ctx.moveTo(size, 0);
+            ctx.lineTo(-size, size);
+            ctx.lineTo(-size, size * 0.5);
+            ctx.lineTo(-size * 0.7, 0);
+            ctx.lineTo(-size, -size * 0.5);
+            ctx.lineTo(-size, -size);
             ctx.closePath();
             ctx.fill();
-
-            // Draw thrust flame when accelerating
-            if (keys.ArrowUp || keys['w'] || gamepadThrusting) {
-                ctx.fillStyle = '#ffffff';
+            if (keys.ArrowUp || keys["w"] || gamepadThrusting) {
+                ctx.fillStyle = "#ffffff";
                 ctx.beginPath();
-                ctx.moveTo(-size * 0.7, size * 0.5);   // Start from cutout edge (top)
-                ctx.lineTo(-size * 1.5, 0);             // Flame tip
-                ctx.lineTo(-size * 0.7, -size * 0.5);  // End at cutout edge (bottom)
-                ctx.lineTo(-size * 0.7, 0);             // Back to center of cutout
+                ctx.moveTo(-size * 0.7, size * 0.5);
+                ctx.lineTo(-size * 1.5, 0);
+                ctx.lineTo(-size * 0.7, -size * 0.5);
+                ctx.lineTo(-size * 0.7, 0);
                 ctx.closePath();
                 ctx.fill();
             }
-
             ctx.restore();
         }
-
-        // Draw lives indicator in upper left corner
         function drawLives() {
             const startX = scale.size(0.03);
             const startY = scale.size(0.03);
             const shipSize = scale.size(0.015);
             const spacing = scale.size(0.04);
-
             for (let i = 0; i < lives; i++) {
-                const x = startX + (i * spacing);
+                const x = startX + i * spacing;
                 const y = startY;
-
                 ctx.save();
                 ctx.translate(x, y);
-                ctx.rotate(-Math.PI / 2);  // Point upward
-
-                // Draw small spaceship icon with cutout
-                ctx.fillStyle = '#ffffff';
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillStyle = "#ffffff";
                 ctx.beginPath();
-                ctx.moveTo(shipSize, 0);                    // Front point
-                ctx.lineTo(-shipSize, shipSize);            // Bottom back
-                ctx.lineTo(-shipSize, shipSize * 0.5);      // Bottom of cutout
-                ctx.lineTo(-shipSize * 0.7, 0);             // Center of cutout
-                ctx.lineTo(-shipSize, -shipSize * 0.5);     // Top of cutout
-                ctx.lineTo(-shipSize, -shipSize);           // Top back
+                ctx.moveTo(shipSize, 0);
+                ctx.lineTo(-shipSize, shipSize);
+                ctx.lineTo(-shipSize, shipSize * 0.5);
+                ctx.lineTo(-shipSize * 0.7, 0);
+                ctx.lineTo(-shipSize, -shipSize * 0.5);
+                ctx.lineTo(-shipSize, -shipSize);
                 ctx.closePath();
                 ctx.fill();
-
                 ctx.restore();
             }
         }
-
-        // Draw score in upper right corner
         function drawScore() {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             ctx.font = scale.size(0.04) + 'px "Courier New", monospace';
-            ctx.textAlign = 'right';
-            ctx.fillText(score.toString().padStart(8, '0'), canvas.width - scale.size(0.03), scale.size(0.04));
+            ctx.textAlign = "right";
+            ctx.fillText(
+                score.toString().padStart(8, "0"),
+                canvas.width - scale.size(0.03),
+                scale.size(0.04),
+            );
         }
-
-        // Draw level in top middle
         function drawLevel() {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             ctx.font = scale.size(0.05) + 'px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(level.toString().padStart(3, '0'), canvas.width / 2, scale.size(0.05));
+            ctx.textAlign = "center";
+            ctx.fillText(
+                level.toString().padStart(3, "0"),
+                canvas.width / 2,
+                scale.size(0.05),
+            );
         }
-
-        // Draw asteroids
         function drawAsteroids() {
-            asteroids.forEach(asteroid => {
+            asteroids.forEach((asteroid) => {
                 const size = scale.size(asteroid.size);
                 const x = scale.x(asteroid.x);
                 const y = scale.y(asteroid.y);
                 const width = size * 2;
                 const height = size * 2;
-                const radius = size * 0.2; // 20% of size for rounded corners
-
+                const radius = size * 0.2;
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(asteroid.rotation);
-
                 ctx.fillStyle = asteroid.color;
                 ctx.beginPath();
                 ctx.roundRect(-size, -size, width, height, radius);
                 ctx.fill();
-
-                // Add texture to asteroids
                 ctx.strokeStyle = asteroid.color;
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
                 ctx.restore();
             });
         }
-
-        // Draw MEV enemy
         function drawMEV() {
-            mevEnemies.forEach(mev => {
+            mevEnemies.forEach((mev) => {
                 const x = scale.x(mev.x);
                 const y = scale.y(mev.y);
                 const size = scale.size(mev.size);
-
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(mev.rotation);
-
-                // Draw MEV body (hexagon with rounded corners)
-                ctx.fillStyle = '#e5e7e7';
+                ctx.fillStyle = "#e5e7e7";
                 ctx.beginPath();
-
-                // Create hexagon points
                 const radius = size;
                 const cornerRadius = size * 0.15;
-
                 for (let i = 0; i < 6; i++) {
-                    const angle = (Math.PI / 3) * i - Math.PI / 2; // Start from top
+                    const angle = (Math.PI / 3) * i - Math.PI / 2;
                     const nextAngle = (Math.PI / 3) * (i + 1) - Math.PI / 2;
-
                     const x1 = Math.cos(angle) * radius;
                     const y1 = Math.sin(angle) * radius;
                     const x2 = Math.cos(nextAngle) * radius;
                     const y2 = Math.sin(nextAngle) * radius;
-
                     if (i === 0) {
                         ctx.moveTo(x1, y1);
                     }
-
-                    // Draw line to next point with rounded corner
-                    ctx.arcTo(x2, y2,
+                    ctx.arcTo(
+                        x2,
+                        y2,
                         Math.cos(nextAngle + Math.PI / 3) * radius,
                         Math.sin(nextAngle + Math.PI / 3) * radius,
-                        cornerRadius);
+                        cornerRadius,
+                    );
                 }
                 ctx.closePath();
                 ctx.fill();
-
-                // Draw MEV text (rotated -90 degrees to be upright)
                 ctx.save();
-                ctx.rotate(-Math.PI / 2);  // Rotate text 90 degrees counter-clockwise
-                ctx.fillStyle = '#000000';
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillStyle = "#000000";
                 ctx.font = scale.size(0.0225) + 'px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('MEV', 0, 0);
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("MEV", 0, 0);
                 ctx.restore();
-
                 ctx.restore();
             });
         }
-
-        // Draw MEV projectiles
         function drawMEVProjectiles() {
-            ctx.fillStyle = '#ff6666';
-            mevProjectiles.forEach(proj => {
+            ctx.fillStyle = "#ff6666";
+            mevProjectiles.forEach((proj) => {
                 ctx.beginPath();
                 ctx.arc(
                     scale.x(proj.x),
                     scale.y(proj.y),
                     scale.size(0.006),
                     0,
-                    Math.PI * 2
+                    Math.PI * 2,
                 );
                 ctx.fill();
             });
         }
-
-        // Draw explosion effect
         function drawExplosion() {
             const x = scale.x(player.x);
             const y = scale.y(player.y);
             const size = scale.size(player.size);
-
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             for (let i = 0; i < 8; i++) {
-                const angle = (Math.PI * 2 / 8) * i;
+                const angle = ((Math.PI * 2) / 8) * i;
                 ctx.beginPath();
                 ctx.arc(
                     x + Math.cos(angle) * size * 2,
                     y + Math.sin(angle) * size * 2,
                     size * 0.5,
                     0,
-                    Math.PI * 2
+                    Math.PI * 2,
                 );
                 ctx.fill();
             }
-
-            // Game over text
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             ctx.font = scale.size(0.05) + 'px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 + scale.size(0.1));
-
-            // Show appropriate restart instruction based on device
-            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            const restartText = isTouchDevice ? 'Tap to Restart' : 'Press R to Restart';
-            ctx.fillText(restartText, canvas.width / 2, canvas.height / 2 + scale.size(0.15));
+            ctx.textAlign = "center";
+            ctx.fillText(
+                "GAME OVER",
+                canvas.width / 2,
+                canvas.height / 2 + scale.size(0.1),
+            );
+            const isTouchDevice =
+                "ontouchstart" in window || navigator.maxTouchPoints > 0;
+            const restartText = isTouchDevice
+                ? "Tap to Restart"
+                : "Press R to Restart";
+            ctx.fillText(
+                restartText,
+                canvas.width / 2,
+                canvas.height / 2 + scale.size(0.15),
+            );
         }
-
-        // Draw pause screen
         function drawPauseScreen() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             ctx.font = scale.size(0.06) + 'px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
+            ctx.textAlign = "center";
+            ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2);
             ctx.font = scale.size(0.03) + 'px "Courier New", monospace';
-
-            // Show appropriate resume message based on input device
-            const resumeText = gamepadIndex !== null ? 'Press Select to Resume' : 'Press ESC or P to Resume';
-            ctx.fillText(resumeText, canvas.width / 2, canvas.height / 2 + scale.size(0.08));
+            const resumeText =
+                gamepadIndex !== null
+                    ? "Press Select to Resume"
+                    : "Press ESC or P to Resume";
+            ctx.fillText(
+                resumeText,
+                canvas.width / 2,
+                canvas.height / 2 + scale.size(0.08),
+            );
         }
-
-        // Draw projectiles
         function drawProjectiles() {
-            ctx.fillStyle = '#ffffff';
-            projectiles.forEach(proj => {
+            ctx.fillStyle = "#ffffff";
+            projectiles.forEach((proj) => {
                 ctx.beginPath();
                 ctx.arc(
                     scale.x(proj.x),
                     scale.y(proj.y),
-                    scale.size(0.005),  // Small bullet size
+                    scale.size(0.005),
                     0,
-                    Math.PI * 2
+                    Math.PI * 2,
                 );
                 ctx.fill();
             });
         }
-
-        // Shoot projectile
         function shoot() {
             if (!canShoot) return;
-
-            const projectileSpeed = 0.008;  // Speed of projectile
-
-            // Calculate position at the front point of the ship
+            const projectileSpeed = 0.008;
             const frontX = player.x + Math.cos(player.rotation) * player.size;
             const frontY = player.y + Math.sin(player.rotation) * player.size;
-
-            // Projectile inherits player velocity plus its own speed in the firing direction
             projectiles.push({
                 x: frontX,
                 y: frontY,
-                velocityX: player.velocityX + Math.cos(player.rotation) * projectileSpeed,
-                velocityY: player.velocityY + Math.sin(player.rotation) * projectileSpeed,
-                lifetime: 0  // Track how long projectile has existed
+                velocityX:
+                    player.velocityX + Math.cos(player.rotation) * projectileSpeed,
+                velocityY:
+                    player.velocityY + Math.sin(player.rotation) * projectileSpeed,
+                lifetime: 0,
             });
-
-            // Play shoot sound
             playShootSound();
-
-            // Cooldown to prevent holding space from creating too many projectiles
             canShoot = false;
-            setTimeout(() => canShoot = true, 200);  // 200ms cooldown
+            setTimeout(() => (canShoot = true), 200);
         }
-
-        // Update projectiles
         function updateProjectiles(timeScale = 1) {
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const proj = projectiles[i];
-
-                // Update position
                 proj.x += proj.velocityX * timeScale;
                 proj.y += proj.velocityY * timeScale;
                 proj.lifetime += timeScale;
-
-                // Check collision with asteroids
                 let hitAsteroid = false;
                 for (let j = asteroids.length - 1; j >= 0; j--) {
                     const asteroid = asteroids[j];
                     const dx = proj.x - asteroid.x;
                     const dy = proj.y - asteroid.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-
                     if (distance < asteroid.size) {
                         hitAsteroid = true;
-
-                        // Award points based on asteroid size
                         if (asteroid.size >= 0.06) {
-                            score += 100;  // Large asteroid
+                            score += 100;
                         } else if (asteroid.size >= 0.03) {
-                            score += 50;   // Medium asteroid
+                            score += 50;
                         } else {
-                            score += 25;   // Small asteroid
+                            score += 25;
                         }
-
-                        // Notify parent of game state update
-                        window.parent.postMessage({
-                            type: 'GAME_UPDATE',
-                            game: 'Verus Blaster',
-                            lives: lives,
-                            level: level,
-                            score: score
-                        }, '*');
-
-                        // Check for extra life milestone
+                        window.parent.postMessage(
+                            {
+                                type: "GAME_UPDATE",
+                                game: "Verus Blaster",
+                                lives: lives,
+                                level: level,
+                                score: score,
+                            },
+                            "*",
+                        );
                         if (score >= nextLifeAt) {
                             lives++;
                             nextLifeAt += 5000;
                             playExtraLifeSound();
-
-                            // Notify parent of game state update
-                            window.parent.postMessage({
-                                type: 'GAME_UPDATE',
-                                game: 'Verus Blaster',
-                                lives: lives,
-                                level: level,
-                                score: score
-                            }, '*');
+                            window.parent.postMessage(
+                                {
+                                    type: "GAME_UPDATE",
+                                    game: "Verus Blaster",
+                                    lives: lives,
+                                    level: level,
+                                    score: score,
+                                },
+                                "*",
+                            );
                         }
-
-                        // Split asteroid if it's large enough
                         if (asteroid.size > 0.02) {
                             const newSize = asteroid.size / 2;
-                            const speed = Math.sqrt(asteroid.velocityX ** 2 + asteroid.velocityY ** 2) * 2;
-
-                            // Create two new asteroids with random directions
+                            const speed =
+                                Math.sqrt(asteroid.velocityX ** 2 + asteroid.velocityY ** 2) *
+                                2;
                             for (let k = 0; k < 2; k++) {
                                 const angle = Math.random() * Math.PI * 2;
                                 asteroids.push({
@@ -1042,64 +849,50 @@
                                     size: newSize,
                                     color: asteroid.color,
                                     rotation: Math.random() * Math.PI * 2,
-                                    rotationSpeed: (Math.random() - 0.5) * 0.04
+                                    rotationSpeed: (Math.random() - 0.5) * 0.04,
                                 });
                             }
                         }
-
-                        // Remove the hit asteroid
                         asteroids.splice(j, 1);
                         playExplosionSound();
                         break;
                     }
                 }
-
-                // Remove projectile if it hit something or went off screen (max range: half screen)
-                if (hitAsteroid || proj.x < 0 || proj.x > 1 || proj.y < 0 || proj.y > 1 || proj.lifetime > 62) {
+                if (
+                    hitAsteroid ||
+                    proj.x < 0 ||
+                    proj.x > 1 ||
+                    proj.y < 0 ||
+                    proj.y > 1 ||
+                    proj.lifetime > 62
+                ) {
                     projectiles.splice(i, 1);
                 }
             }
         }
-
-        // Update asteroids
         function updateAsteroids(timeScale = 1) {
-            asteroids.forEach(asteroid => {
-                // Update position
+            asteroids.forEach((asteroid) => {
                 asteroid.x += asteroid.velocityX * timeScale;
                 asteroid.y += asteroid.velocityY * timeScale;
-
-                // Update rotation
                 asteroid.rotation += asteroid.rotationSpeed * timeScale;
-
-                // Wrap around screen edges
                 if (asteroid.x < -asteroid.size) asteroid.x = 1 + asteroid.size;
                 if (asteroid.x > 1 + asteroid.size) asteroid.x = -asteroid.size;
                 if (asteroid.y < -asteroid.size) asteroid.y = 1 + asteroid.size;
                 if (asteroid.y > 1 + asteroid.size) asteroid.y = -asteroid.size;
             });
         }
-
-        // Update MEV enemy
         function updateMEV(timeScale = 1) {
-            mevEnemies.forEach(mev => {
-                // Move MEV like an asteroid (straight line)
+            mevEnemies.forEach((mev) => {
                 mev.x += mev.velocityX * timeScale;
                 mev.y += mev.velocityY * timeScale;
-
-                // Wrap around screen edges
                 if (mev.x < -mev.size) mev.x = 1 + mev.size;
                 if (mev.x > 1 + mev.size) mev.x = -mev.size;
                 if (mev.y < -mev.size) mev.y = 1 + mev.size;
                 if (mev.y > 1 + mev.size) mev.y = -mev.size;
-
-                // Rotate to face player
                 const angleToPlayer = Math.atan2(player.y - mev.y, player.x - mev.x);
                 mev.rotation = angleToPlayer;
-
-                // Individual shooting logic
                 mev.shootCooldown -= timeScale;
                 if (mev.shootCooldown <= 0 && Math.random() < 0.01) {
-                    // This MEV shoots
                     const projectileSpeed = 0.006;
                     mevProjectiles.push({
                         x: mev.x,
@@ -1107,19 +900,15 @@
                         velocityX: Math.cos(mev.rotation) * projectileSpeed,
                         velocityY: Math.sin(mev.rotation) * projectileSpeed,
                         lifetime: 0,
-                        mevId: mev.id  // Track which MEV fired this projectile
+                        mevId: mev.id,
                     });
-                    mev.shootCooldown = 120 + Math.random() * 240;  // 2-6 seconds between shots
+                    mev.shootCooldown = 120 + Math.random() * 240;
                 }
             });
         }
-
-        // MEV shoots
         function mevShoot() {
-            // Random MEV shoots
             const mev = mevEnemies[Math.floor(Math.random() * mevEnemies.length)];
             if (!mev) return;
-
             const projectileSpeed = 0.006;
             mevProjectiles.push({
                 x: mev.x,
@@ -1127,40 +916,33 @@
                 velocityX: Math.cos(mev.rotation) * projectileSpeed,
                 velocityY: Math.sin(mev.rotation) * projectileSpeed,
                 lifetime: 0,
-                mevId: mev.id  // Track which MEV fired this projectile
+                mevId: mev.id,
             });
         }
-
-        // Update MEV projectiles
         function updateMEVProjectiles(timeScale = 1) {
             for (let i = mevProjectiles.length - 1; i >= 0; i--) {
                 const proj = mevProjectiles[i];
-
-                // Update position
                 proj.x += proj.velocityX * timeScale;
                 proj.y += proj.velocityY * timeScale;
                 proj.lifetime += timeScale;
-
-                // Check collision with player
                 if (!invincible && !gameOver) {
                     const dx = proj.x - player.x;
                     const dy = proj.y - player.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-
                     if (distance < player.size + 0.006) {
                         lives--;
                         mevProjectiles.splice(i, 1);
                         playPlayerDeathSound();
-
-                        // Notify parent of game state update
-                        window.parent.postMessage({
-                            type: 'GAME_UPDATE',
-                            game: 'Verus Blaster',
-                            lives: lives,
-                            level: level,
-                            score: score
-                        }, '*');
-
+                        window.parent.postMessage(
+                            {
+                                type: "GAME_UPDATE",
+                                game: "Verus Blaster",
+                                lives: lives,
+                                level: level,
+                                score: score,
+                            },
+                            "*",
+                        );
                         if (lives <= 0) {
                             gameOver = true;
                         } else {
@@ -1169,67 +951,57 @@
                         continue;
                     }
                 }
-
-                // Remove if off screen or too old
-                if (proj.x < 0 || proj.x > 1 || proj.y < 0 || proj.y > 1 || proj.lifetime > 180) {
+                if (
+                    proj.x < 0 ||
+                    proj.x > 1 ||
+                    proj.y < 0 ||
+                    proj.y > 1 ||
+                    proj.lifetime > 180
+                ) {
                     mevProjectiles.splice(i, 1);
                 }
             }
         }
-
-        // Check collision between player projectiles and MEV
         function checkMEVCollision() {
             if (mevEnemies.length === 0) return;
-
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const proj = projectiles[i];
                 let hitMEV = false;
-
                 for (let m = mevEnemies.length - 1; m >= 0; m--) {
                     const mev = mevEnemies[m];
                     const dx = proj.x - mev.x;
                     const dy = proj.y - mev.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-
                     if (distance < mev.size) {
-                        // MEV hit
                         mev.health--;
                         projectiles.splice(i, 1);
                         hitMEV = true;
-
                         if (mev.health <= 0) {
-                            // MEV destroyed
                             const destroyedMevId = mev.id;
                             mevEnemies.splice(m, 1);
                             mevDefeats++;
-
-                            // Remove all projectiles fired by this MEV
                             for (let p = mevProjectiles.length - 1; p >= 0; p--) {
                                 if (mevProjectiles[p].mevId === destroyedMevId) {
                                     mevProjectiles.splice(p, 1);
                                 }
                             }
-                            score += 500;  // Bonus points for destroying MEV
-
-                            // Check for extra life milestone
+                            score += 500;
                             if (score >= nextLifeAt) {
                                 lives++;
                                 nextLifeAt += 5000;
                                 playExtraLifeSound();
-
-                                // Notify parent of game state update
-                                window.parent.postMessage({
-                                    type: 'GAME_UPDATE',
-                                    game: 'Verus Blaster',
-                                    lives: lives,
-                                    level: level,
-                                    score: score
-                                }, '*');
+                                window.parent.postMessage(
+                                    {
+                                        type: "GAME_UPDATE",
+                                        game: "Verus Blaster",
+                                        lives: lives,
+                                        level: level,
+                                        score: score,
+                                    },
+                                    "*",
+                                );
                             }
-
                             playEnemyDeathSound();
-
-                            // Prevent immediate level transition if all enemies cleared
                             if (asteroids.length === 0 && mevEnemies.length === 0) {
                                 levelTransition = true;
                                 setTimeout(() => {
@@ -1239,67 +1011,53 @@
                                 }, 100);
                             }
                         } else {
-                            // MEV hit but not destroyed
                             playEnemyHitSound();
                         }
                         break;
                     }
                 }
-
                 if (hitMEV) break;
             }
         }
-
-        // Start next level
         function nextLevel() {
-            if (level >= 999) return;  // Max level is 999
-
-            levelTransition = true;  // Set flag to prevent multiple calls
+            if (level >= 999) return;
+            levelTransition = true;
             level++;
             playTriumphSound();
-
-            // Notify parent of game state update
-            window.parent.postMessage({
-                type: 'GAME_UPDATE',
-                game: 'Verus Blaster',
-                lives: lives,
-                level: level,
-                score: score
-            }, '*');
-
-            // Spawn MEV enemy every 3 levels
+            window.parent.postMessage(
+                {
+                    type: "GAME_UPDATE",
+                    game: "Verus Blaster",
+                    lives: lives,
+                    level: level,
+                    score: score,
+                },
+                "*",
+            );
             if (level % 3 === 0) {
-                // Calculate how many MEVs to spawn (1 + number of times we've defeated 3 MEVs)
                 const mevsToSpawn = 1 + Math.floor(mevDefeats / 3);
-
                 for (let m = 0; m < mevsToSpawn; m++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const speed = 0.0004 + (Math.random() * 0.0002);  // Same speed as asteroids
+                    const speed = 0.0004 + Math.random() * 0.0002;
                     mevEnemies.push({
-                        id: mevIdCounter++,  // Assign unique ID
+                        id: mevIdCounter++,
                         x: Math.random(),
                         y: Math.random(),
                         velocityX: Math.cos(angle) * speed,
                         velocityY: Math.sin(angle) * speed,
                         rotation: 0,
                         size: 0.04,
-                        health: 5,  // Takes 5 hits to destroy
-                        shootCooldown: 60 + Math.random() * 120  // Individual shooting cooldown
+                        health: 5,
+                        shootCooldown: 60 + Math.random() * 120,
                     });
                 }
             }
-
-            // Calculate number of asteroids to spawn (increases every 3 levels)
             const asteroidsToSpawn = 2 + Math.floor((level - 1) / 3);
-
-            // Spawn asteroids at random positions (far from player)
             for (let i = 0; i < asteroidsToSpawn; i++) {
                 let x, y, distance;
-                const minDistance = 0.3;  // Minimum distance from player
+                const minDistance = 0.3;
                 let attempts = 0;
-                const maxAttempts = 100;  // Prevent infinite loop
-
-                // Keep trying until we find a safe spawn position
+                const maxAttempts = 100;
                 do {
                     x = Math.random();
                     y = Math.random();
@@ -1307,77 +1065,60 @@
                     const dy = y - player.y;
                     distance = Math.sqrt(dx * dx + dy * dy);
                     attempts++;
-
-                    // If we can't find a safe spot, just use what we have
                     if (attempts >= maxAttempts) {
                         break;
                     }
                 } while (distance < minDistance);
-
                 const angle = Math.random() * Math.PI * 2;
-                const speed = 0.0004 + (Math.random() * 0.0002);
+                const speed = 0.0004 + Math.random() * 0.0002;
                 asteroids.push({
                     x: x,
                     y: y,
                     velocityX: Math.cos(angle) * speed,
                     velocityY: Math.sin(angle) * speed,
                     size: 0.06,
-                    color: '#e5e7e7',
+                    color: "#e5e7e7",
                     rotation: Math.random() * Math.PI * 2,
-                    rotationSpeed: (Math.random() - 0.5) * 0.04
+                    rotationSpeed: (Math.random() - 0.5) * 0.04,
                 });
             }
-
-            // Give player temporary invincibility
             invincible = true;
-            invincibleTimer = 120;  // 2 seconds
-
-            // Clear transition flag after spawning complete
+            invincibleTimer = 120;
             levelTransition = false;
         }
-
-        // Check collision between player and asteroids
         function checkCollisions() {
             if (gameOver || invincible) return;
-
-            asteroids.forEach(asteroid => {
+            asteroids.forEach((asteroid) => {
                 const dx = player.x - asteroid.x;
                 const dy = player.y - asteroid.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-
-                // Check if collision occurred
                 if (distance < player.size + asteroid.size) {
                     lives--;
                     playPlayerDeathSound();
-
-                    // Notify parent of game state update
-                    window.parent.postMessage({
-                        type: 'GAME_UPDATE',
-                        game: 'Verus Blaster',
-                        lives: lives,
-                        level: level,
-                        score: score
-                    }, '*');
-
+                    window.parent.postMessage(
+                        {
+                            type: "GAME_UPDATE",
+                            game: "Verus Blaster",
+                            lives: lives,
+                            level: level,
+                            score: score,
+                        },
+                        "*",
+                    );
                     if (lives <= 0) {
                         gameOver = true;
                     } else {
-                        // Respawn player with temporary invincibility
                         respawnPlayer();
                     }
                 }
             });
         }
-
-        // Respawn player at current position with invincibility
         function respawnPlayer() {
             player.velocityX = 0;
             player.velocityY = 0;
             invincible = true;
-            invincibleTimer = 180;  // 3 seconds of invincibility at 60fps
+            invincibleTimer = 180;
         }
-
-        // Reset game
         function resetGame() {
             player.x = 0.5;
             player.y = 0.5;
@@ -1391,23 +1132,22 @@
             nextLifeAt = 5000;
             invincible = false;
             invincibleTimer = 0;
-
-            // Notify parent of game state update
-            window.parent.postMessage({
-                type: 'GAME_UPDATE',
-                game: 'Verus Blaster',
-                lives: lives,
-                level: level,
-                score: score
-            }, '*');
+            window.parent.postMessage(
+                {
+                    type: "GAME_UPDATE",
+                    game: "Verus Blaster",
+                    lives: lives,
+                    level: level,
+                    score: score,
+                },
+                "*",
+            );
             levelTransition = false;
             projectiles.length = 0;
             mevEnemies.length = 0;
             mevDefeats = 0;
             mevProjectiles.length = 0;
             mevShootCooldown = 0;
-
-            // Reset asteroids to original state
             asteroids.length = 0;
             asteroids.push(
                 {
@@ -1416,9 +1156,9 @@
                     velocityX: 0.0005,
                     velocityY: 0.0003,
                     size: 0.06,
-                    color: '#e5e7e7',
+                    color: "#e5e7e7",
                     rotation: 0,
-                    rotationSpeed: 0.02
+                    rotationSpeed: 0.02,
                 },
                 {
                     x: 0.7,
@@ -1426,202 +1166,173 @@
                     velocityX: -0.0003,
                     velocityY: 0.0004,
                     size: 0.06,
-                    color: '#e5e7e7',
+                    color: "#e5e7e7",
                     rotation: 0,
-                    rotationSpeed: -0.015
-                }
+                    rotationSpeed: -0.015,
+                },
             );
         }
-
-        // Update player physics
         function updatePlayer(timeScale = 1) {
             if (gameOver) return;
-
-            // Reset gamepad thrust flag each frame
             gamepadThrusting = false;
-
-            // Update invincibility timer
             if (invincible) {
                 invincibleTimer -= timeScale;
                 if (invincibleTimer <= 0) {
                     invincible = false;
                 }
             }
-
-            // Shooting (keyboard, touch, or gamepad)
             const gamepad = getGamepadInput();
-            // PS3: Square=button 2, L2=button 6, right trigger=button 7
-            const gamepadShoot = gamepad && (gamepad.buttons[0].pressed || gamepad.buttons[2].pressed || gamepad.buttons[7].pressed);
-
-            if (keys[' '] || touchControls.shootButton.active || gamepadShoot) {
+            const gamepadShoot =
+                gamepad &&
+                (gamepad.buttons[0].pressed ||
+                    gamepad.buttons[2].pressed ||
+                    gamepad.buttons[7].pressed);
+            if (keys[" "] || touchControls.shootButton.active || gamepadShoot) {
                 shoot();
             }
-
-            // Check for gamepad input
             let usingGamepad = false;
             if (gamepad) {
                 const leftStickX = gamepad.axes[0];
                 const leftStickY = gamepad.axes[1];
                 const deadzone = 0.15;
-
-                // Check if left stick is being used
-                if (Math.abs(leftStickX) > deadzone || Math.abs(leftStickY) > deadzone) {
+                if (
+                    Math.abs(leftStickX) > deadzone ||
+                    Math.abs(leftStickY) > deadzone
+                ) {
                     usingGamepad = true;
-
-                    // Use left stick for movement like joystick
                     const angle = Math.atan2(leftStickY, leftStickX);
-                    const magnitude = Math.sqrt(leftStickX * leftStickX + leftStickY * leftStickY);
+                    const magnitude = Math.sqrt(
+                        leftStickX * leftStickX + leftStickY * leftStickY,
+                    );
                     const targetRotation = angle;
-
-                    // Smoothly rotate toward stick direction
                     let rotationDiff = targetRotation - player.rotation;
                     while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
                     while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
-
                     if (Math.abs(rotationDiff) > 0.05) {
-                        player.rotation += Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
+                        player.rotation +=
+                            Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
                     }
-
-                    // Thrust based on stick magnitude
                     const thrustAmount = Math.min(magnitude, 1);
-                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount;
-                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount;
-
-                    // Track if thrusting for visual effect
+                    player.velocityX +=
+                        Math.cos(player.rotation) *
+                        player.acceleration *
+                        timeScale *
+                        thrustAmount;
+                    player.velocityY +=
+                        Math.sin(player.rotation) *
+                        player.acceleration *
+                        timeScale *
+                        thrustAmount;
                     gamepadThrusting = thrustAmount > 0.3;
                 }
-
-                // L2 button (button 6) or Circle (button 1) for braking on PS3 controller
                 if (gamepad.buttons[6].pressed || gamepad.buttons[1].pressed) {
                     player.velocityX *= Math.pow(player.brakeForce, timeScale);
                     player.velocityY *= Math.pow(player.brakeForce, timeScale);
                 }
             }
-
-            // Handle touch joystick input
             if (!usingGamepad && touchControls.joystick.active) {
-                const dx = touchControls.joystick.currentX - touchControls.joystick.startX;
-                const dy = touchControls.joystick.currentY - touchControls.joystick.startY;
+                const dx =
+                    touchControls.joystick.currentX - touchControls.joystick.startX;
+                const dy =
+                    touchControls.joystick.currentY - touchControls.joystick.startY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance > 10) { // Dead zone
+                if (distance > 10) {
                     const angle = Math.atan2(dy, dx);
                     const targetRotation = angle;
-
-                    // Smoothly rotate toward joystick direction
                     let rotationDiff = targetRotation - player.rotation;
-                    // Normalize to -PI to PI
                     while (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
                     while (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
-
                     if (Math.abs(rotationDiff) > 0.05) {
-                        player.rotation += Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
+                        player.rotation +=
+                            Math.sign(rotationDiff) * player.rotationSpeed * timeScale;
                     }
-
-                    // Thrust based on joystick distance (reduced to half strength)
                     const thrustAmount = Math.min(distance / joystickRadius, 1);
-                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
-                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale * thrustAmount * 1;
-
-                    // Track if thrusting for visual effect
+                    player.velocityX +=
+                        Math.cos(player.rotation) *
+                        player.acceleration *
+                        timeScale *
+                        thrustAmount *
+                        1;
+                    player.velocityY +=
+                        Math.sin(player.rotation) *
+                        player.acceleration *
+                        timeScale *
+                        thrustAmount *
+                        1;
                     gamepadThrusting = thrustAmount > 0.3;
                 }
             } else if (!usingGamepad) {
-                // Keyboard rotation (only if not using gamepad)
-                if (keys.ArrowLeft || keys['a']) {
+                if (keys.ArrowLeft || keys["a"]) {
                     player.rotation -= player.rotationSpeed * timeScale;
                 }
-                if (keys.ArrowRight || keys['d']) {
+                if (keys.ArrowRight || keys["d"]) {
                     player.rotation += player.rotationSpeed * timeScale;
                 }
-
-                // Keyboard acceleration
-                if (keys.ArrowUp || keys['w']) {
-                    player.velocityX += Math.cos(player.rotation) * player.acceleration * timeScale;
-                    player.velocityY += Math.sin(player.rotation) * player.acceleration * timeScale;
+                if (keys.ArrowUp || keys["w"]) {
+                    player.velocityX +=
+                        Math.cos(player.rotation) * player.acceleration * timeScale;
+                    player.velocityY +=
+                        Math.sin(player.rotation) * player.acceleration * timeScale;
                 }
-
-                // Keyboard braking
-                if (keys.ArrowDown || keys['s']) {
+                if (keys.ArrowDown || keys["s"]) {
                     player.velocityX *= Math.pow(player.brakeForce, timeScale);
                     player.velocityY *= Math.pow(player.brakeForce, timeScale);
                 }
             }
-
-            // Apply friction
             player.velocityX *= Math.pow(player.friction, timeScale);
             player.velocityY *= Math.pow(player.friction, timeScale);
-
-            // Update position
             player.x += player.velocityX * timeScale;
             player.y += player.velocityY * timeScale;
-
-            // Wrap around screen edges
             if (player.x < 0) player.x = 1;
             if (player.x > 1) player.x = 0;
             if (player.y < 0) player.y = 1;
             if (player.y > 1) player.y = 0;
         }
-
-        // Keyboard event listeners
-        window.addEventListener('keydown', (e) => {
-            // Initialize audio on first interaction
+        window.addEventListener("keydown", (e) => {
             initAudio();
-
-            // Start game on any key press if not started
             if (!gameStarted) {
                 gameStarted = true;
                 e.preventDefault();
                 return;
             }
-
             if (e.key in keys) {
                 keys[e.key] = true;
-                e.preventDefault(); // Prevent page scrolling
-            }
-            // Handle space key specifically
-            if (e.key === ' ' || e.code === 'Space') {
-                keys[' '] = true;
                 e.preventDefault();
             }
-            // Toggle pause with ESC or P key
-            if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && !gameOver) {
+            if (e.key === " " || e.code === "Space") {
+                keys[" "] = true;
+                e.preventDefault();
+            }
+            if (
+                (e.key === "Escape" || e.key === "p" || e.key === "P") &&
+                !gameOver
+            ) {
                 paused = !paused;
                 e.preventDefault();
             }
-            // Restart game with R key
-            if (e.key === 'r' || e.key === 'R') {
+            if (e.key === "r" || e.key === "R") {
                 if (gameOver) resetGame();
             }
         });
-
-        window.addEventListener('keyup', (e) => {
+        window.addEventListener("keyup", (e) => {
             if (e.key in keys) {
                 keys[e.key] = false;
                 e.preventDefault();
             }
-            // Handle space key specifically
-            if (e.key === ' ' || e.code === 'Space') {
-                keys[' '] = false;
+            if (e.key === " " || e.code === "Space") {
+                keys[" "] = false;
                 e.preventDefault();
             }
         });
-
-        // Initial resize
         resizeCanvas();
-
-        // Resize canvas when window size changes
-        window.addEventListener('resize', resizeCanvas);
-
-        // Touch event listeners for HTML controls
-        const joystickElement = document.getElementById('joystick');
-        const joystickHandle = document.getElementById('joystick-handle');
-        const shootButtonElement = document.getElementById('shoot-button');
-        const pauseButtonElement = document.getElementById('pause-button');
-
-        joystickElement.addEventListener('touchstart', (e) => {
+        window.addEventListener("resize", resizeCanvas);
+        const joystickElement = document.getElementById("joystick");
+        const joystickHandle = document.getElementById("joystick-handle");
+        const shootButtonElement = document.getElementById("shoot-button");
+        const pauseButtonElement = document.getElementById("pause-button");
+        joystickElement.addEventListener("touchstart", (e) => {
             e.preventDefault();
-            const touch = e.changedTouches[0]; // Use changedTouches for the new touch
+            const touch = e.changedTouches[0];
             const rect = joystickElement.getBoundingClientRect();
             touchControls.joystick.active = true;
             touchControls.joystick.identifier = touch.identifier;
@@ -1631,12 +1342,9 @@
             touchControls.joystick.currentY = touch.clientY;
             updateJoystickVisual();
         });
-
-        joystickElement.addEventListener('touchmove', (e) => {
+        joystickElement.addEventListener("touchmove", (e) => {
             e.preventDefault();
             if (!touchControls.joystick.active) return;
-
-            // Find the correct touch by identifier
             for (let touch of e.touches) {
                 if (touch.identifier === touchControls.joystick.identifier) {
                     touchControls.joystick.currentX = touch.clientX;
@@ -1646,133 +1354,113 @@
                 }
             }
         });
-
-        joystickElement.addEventListener('touchend', (e) => {
+        joystickElement.addEventListener("touchend", (e) => {
             e.preventDefault();
             touchControls.joystick.active = false;
             touchControls.joystick.identifier = null;
-            joystickHandle.style.left = '50%';
-            joystickHandle.style.top = '50%';
+            joystickHandle.style.left = "50%";
+            joystickHandle.style.top = "50%";
         });
-
-        shootButtonElement.addEventListener('touchstart', (e) => {
+        shootButtonElement.addEventListener("touchstart", (e) => {
             e.preventDefault();
-            // Initialize audio on first interaction
             initAudio();
             touchControls.shootButton.active = true;
             touchControls.shootButton.identifier = e.changedTouches[0].identifier;
-            shootButtonElement.classList.add('active');
+            shootButtonElement.classList.add("active");
         });
-
-        shootButtonElement.addEventListener('touchend', (e) => {
+        shootButtonElement.addEventListener("touchend", (e) => {
             e.preventDefault();
             touchControls.shootButton.active = false;
             touchControls.shootButton.identifier = null;
-            shootButtonElement.classList.remove('active');
+            shootButtonElement.classList.remove("active");
         });
-
-        shootButtonElement.addEventListener('touchcancel', (e) => {
+        shootButtonElement.addEventListener("touchcancel", (e) => {
             e.preventDefault();
             touchControls.shootButton.active = false;
             touchControls.shootButton.identifier = null;
-            shootButtonElement.classList.remove('active');
+            shootButtonElement.classList.remove("active");
         });
-
-        pauseButtonElement.addEventListener('touchstart', (e) => {
+        pauseButtonElement.addEventListener("touchstart", (e) => {
             e.preventDefault();
             if (!gameOver) {
                 paused = !paused;
-                pauseButtonElement.classList.toggle('active', paused);
+                pauseButtonElement.classList.toggle("active", paused);
             }
         });
-
         function updateJoystickVisual() {
-            const dx = touchControls.joystick.currentX - touchControls.joystick.startX;
-            const dy = touchControls.joystick.currentY - touchControls.joystick.startY;
+            const dx =
+                touchControls.joystick.currentX - touchControls.joystick.startX;
+            const dy =
+                touchControls.joystick.currentY - touchControls.joystick.startY;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            const maxDistance = 35; // Half of joystick radius minus handle radius
-
+            const maxDistance = 35;
             if (distance > maxDistance) {
                 const angle = Math.atan2(dy, dx);
-                joystickHandle.style.left = (50 + (Math.cos(angle) * maxDistance * 100 / 60)) + '%';
-                joystickHandle.style.top = (50 + (Math.sin(angle) * maxDistance * 100 / 60)) + '%';
+                joystickHandle.style.left =
+                    50 + (Math.cos(angle) * maxDistance * 100) / 60 + "%";
+                joystickHandle.style.top =
+                    50 + (Math.sin(angle) * maxDistance * 100) / 60 + "%";
             } else {
-                joystickHandle.style.left = (50 + (dx * 100 / 60)) + '%';
-                joystickHandle.style.top = (50 + (dy * 100 / 60)) + '%';
+                joystickHandle.style.left = 50 + (dx * 100) / 60 + "%";
+                joystickHandle.style.top = 50 + (dy * 100) / 60 + "%";
             }
         }
-
-        // Canvas tap to restart game (mobile)
-        canvas.addEventListener('touchstart', (e) => {
-            // Start game on tap if not started
+        canvas.addEventListener("touchstart", (e) => {
             if (!gameStarted) {
                 e.preventDefault();
                 initAudio();
                 gameStarted = true;
                 return;
             }
-
             if (gameOver) {
                 e.preventDefault();
                 resetGame();
             }
         });
-
-        // Game loop
         function gameLoop(currentTime) {
-            // Calculate delta time and normalize to 60 FPS
             const deltaTime = currentTime - lastTime;
             lastTime = currentTime;
             const timeScale = deltaTime / targetFrameTime;
-
-            // Check gamepad button for starting/restarting the game (every frame)
             const gamepad = getGamepadInput();
             if (gamepad) {
-                // Start game on gamepad button press if not started
                 if (!gameStarted) {
                     for (let i = 0; i < gamepad.buttons.length; i++) {
                         const currentButtonState = gamepad.buttons[i].pressed;
                         const previousButtonState = lastGamepadButtonStates[i] || false;
-
                         if (currentButtonState && !previousButtonState) {
-                            console.log('Game started via gamepad button:', i);
+                            console.log("Game started via gamepad button:", i);
                             initAudio();
                             gameStarted = true;
                             break;
                         }
                     }
                 }
-
-                // Restart game on gamepad button press if game over
                 if (gameOver) {
                     for (let i = 0; i < gamepad.buttons.length; i++) {
                         const currentButtonState = gamepad.buttons[i].pressed;
                         const previousButtonState = lastGamepadButtonStates[i] || false;
-
                         if (currentButtonState && !previousButtonState) {
-                            console.log('Game restarted via gamepad button:', i);
+                            console.log("Game restarted via gamepad button:", i);
                             resetGame();
                             break;
                         }
                     }
                 }
-
-                // Pause/unpause with Select button (button 8) if game is running
                 if (gameStarted && !gameOver) {
-                    const selectButtonState = gamepad.buttons[8] ? gamepad.buttons[8].pressed : false;
-                    const selectButtonPreviousState = lastGamepadButtonStates[8] || false;
-
+                    const selectButtonState = gamepad.buttons[8]
+                        ? gamepad.buttons[8].pressed
+                        : false;
+                    const selectButtonPreviousState =
+                        lastGamepadButtonStates[8] || false;
                     if (selectButtonState && !selectButtonPreviousState) {
                         paused = !paused;
-                        console.log('Pause toggled via Select button:', paused);
+                        console.log("Pause toggled via Select button:", paused);
                     }
                 }
-
-                // Store current button states for next frame
-                lastGamepadButtonStates = gamepad.buttons.map(button => button.pressed);
+                lastGamepadButtonStates = gamepad.buttons.map(
+                    (button) => button.pressed,
+                );
             }
-
-            // Only update if game has started, time scale is reasonable (prevent huge jumps) and not paused
             if (gameStarted && !paused && timeScale > 0 && timeScale < 3) {
                 updatePlayer(timeScale);
                 updateProjectiles(timeScale);
@@ -1781,19 +1469,18 @@
                 updateMEVProjectiles(timeScale);
                 checkCollisions();
                 checkMEVCollision();
-
-                // Check if level is complete
-                // Wait for all asteroids to be destroyed, and if MEV exists, wait for it too
-                if (!gameOver && !levelTransition && asteroids.length === 0 && mevEnemies.length === 0) {
+                if (
+                    !gameOver &&
+                    !levelTransition &&
+                    asteroids.length === 0 &&
+                    mevEnemies.length === 0
+                ) {
                     nextLevel();
                 }
             }
-
             draw();
             requestAnimationFrame(gameLoop);
         }
-
-        // Start game loop
         lastTime = performance.now();
         gameLoop(lastTime);
     </script>
