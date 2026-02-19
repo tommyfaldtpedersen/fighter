@@ -611,7 +611,7 @@
 
             // Title
             ctx.fillStyle = '#ffffff';
-            ctx.font = scale.size(0.08) + 'px "Courier New", monospace';
+            ctx.font = scale.size(0.12) + 'px "Courier New", monospace';
             ctx.textAlign = 'center';
             ctx.fillText('VERUS BLASTER', canvas.width / 2, canvas.height * 0.2);
 
@@ -641,7 +641,7 @@
             ctx.fillText('by Tommy Faldt Pedersen', canvas.width / 2, canvas.height * 0.8);
 
             // Instruction
-            ctx.font = scale.size(0.03) + 'px "Courier New", monospace';
+            ctx.font = scale.size(0.04) + 'px "Courier New", monospace';
             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             const startText = isTouchDevice ? 'Tap to Start' : 'Press Any Key or Press Controller Button to Start';
             ctx.fillText(startText, canvas.width / 2, canvas.height * 0.9);
