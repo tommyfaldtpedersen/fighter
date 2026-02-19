@@ -742,7 +742,10 @@
             const shipSize = scale.size(0.015);
             const spacing = scale.size(0.04);
 
-            for (let i = 0; i < lives; i++) {
+            // Display up to 10 lives as icons
+            const livesToDisplay = Math.min(lives, 10);
+
+            for (let i = 0; i < livesToDisplay; i++) {
                 const x = startX + (i * spacing);
                 const y = startY;
 
@@ -763,6 +766,16 @@
                 ctx.fill();
 
                 ctx.restore();
+            }
+
+            // Show "+" sign if lives exceed 10
+            if (lives > 10) {
+                const plusX = startX + (10 * spacing) - 14;
+                const plusY = startY + scale.size(0.006) + 5;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = scale.size(0.04) + 'px "Courier New", monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('+', plusX, plusY);
             }
         }
 
