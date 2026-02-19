@@ -560,6 +560,7 @@
         // Game state
         let gameStarted = false;
         let gameOver = false;
+        let gameOverTime = null;  // Timestamp when player died (for explosion fade)
         let paused = false;
         let lives = 3;
         let score = 0;
@@ -886,7 +887,13 @@
             const y = scale.y(player.y);
             const size = scale.size(player.size);
 
-            ctx.fillStyle = '#ffffff';
+            // Calculate explosion fade effect (1 second fade-out)
+            const elapsedTime = performance.now() - gameOverTime;
+            const fadeDuration = 1000;  // 1 second
+            const opacity = Math.max(0, 1 - (elapsedTime / fadeDuration));
+
+            // Draw fading explosion circles
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
             for (let i = 0; i < 8; i++) {
                 const angle = (Math.PI * 2 / 8) * i;
                 ctx.beginPath();
@@ -902,14 +909,15 @@
 
             // Game over text
             ctx.fillStyle = '#ffffff';
-            ctx.font = scale.size(0.05) + 'px "Courier New", monospace';
+            ctx.font = scale.size(0.06) + 'px "Courier New", monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 + scale.size(0.1));
+            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+            ctx.font = scale.size(0.03) + 'px "Courier New", monospace';
 
             // Show appropriate restart instruction based on device
             const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             const restartText = isTouchDevice ? 'Tap to Restart' : 'Press R to Restart';
-            ctx.fillText(restartText, canvas.width / 2, canvas.height / 2 + scale.size(0.15));
+            ctx.fillText(restartText, canvas.width / 2, canvas.height / 2 + scale.size(0.08));
         }
 
         // Draw pause screen
@@ -1163,6 +1171,7 @@
 
                         if (lives <= 0) {
                             gameOver = true;
+                            gameOverTime = performance.now();
                         } else {
                             respawnPlayer();
                         }
@@ -1361,6 +1370,7 @@
 
                     if (lives <= 0) {
                         gameOver = true;
+                        gameOverTime = performance.now();
                     } else {
                         // Respawn player with temporary invincibility
                         respawnPlayer();
