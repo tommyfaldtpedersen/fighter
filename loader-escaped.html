@@ -43,30 +43,30 @@
     <script>
         async function loadGame() {
             try {
-                // Fetch the JSON file
-                const response = await fetch('game-chunks-escaped.json');
-                const data = await response.json();
+                // Fetch the JSON file with individual chunks
+                const response = await fetch('game-chunks.json');
+                const chunksData = await response.json();
 
                 let loadedContent = '';
 
-                // Reassemble chunks from JSON
-                for (let i = 0; i < data.totalChunks; i++) {
-                    loadedContent += data.chunks[i];
+                // Get all chunk keys and load them in order
+                const chunkKeys = Object.keys(chunksData).sort((a, b) => {
+                    const numA = parseInt(a.split('-')[1]);
+                    const numB = parseInt(b.split('-')[1]);
+                    return numA - numB;
+                });
 
-                    const percent = Math.round(((i + 1) / data.totalChunks) * 100);
+                // Reassemble chunks from JSON entries
+                // JSON automatically unescapes the content, so no additional processing needed
+                for (let i = 0; i < chunkKeys.length; i++) {
+                    loadedContent += chunksData[chunkKeys[i]];
+
+                    const percent = Math.round(((i + 1) / chunkKeys.length) * 100);
                     document.getElementById('percent').textContent = percent;
                 }
 
-                // Unescape the content (order matters - do quotes before backslashes)
-                loadedContent = loadedContent
-                    .replace(/\\"/g, '"')      // Unescape double quotes: \" -> "
-                    .replace(/\\'/g, "'")      // Unescape single quotes: \' -> '
-                    .replace(/\\\\/g, '\\');   // Unescape backslashes: \\ -> \
-
                 // Hide loader and show game
                 document.getElementById('loader').style.display = 'none';
-
-                console.log('Loaded Content:', loadedContent); // Debug: Check the loaded content
 
                 // Create iframe with the complete content
                 const blob = new Blob([loadedContent], { type: 'text/html' });
