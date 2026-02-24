@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Verus Blaster...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #222;
+            font-family: Arial, sans-serif;
+        }
+
+        #loader {
+            text-align: center;
+            color: #fff;
+        }
+
+        #progress {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader">
+        <div id="progress">Loading game... <span id="percent">0</span>%</div>
+    </div>
+    <div id="game-container"></div>
+
+    <script>
+        async function loadGame() {
+            try {
+                // Fetch the JSON file
+                const response = await fetch('game-chunks-escaped.json');
+                const data = await response.json();
+
+                let loadedContent = '';
+
+                // Reassemble chunks from JSON
+                for (let i = 0; i < data.totalChunks; i++) {
+                    loadedContent += data.chunks[i];
+
+                    const percent = Math.round(((i + 1) / data.totalChunks) * 100);
+                    document.getElementById('percent').textContent = percent;
+                }
+
+                // Unescape the content (order matters - do quotes before backslashes)
+                loadedContent = loadedContent
+                    .replace(/\\"/g, '"')      // Unescape double quotes: \" -> "
+                    .replace(/\\'/g, "'")      // Unescape single quotes: \' -> '
+                    .replace(/\\\\/g, '\\');   // Unescape backslashes: \\ -> \
+
+                // Hide loader and show game
+                document.getElementById('loader').style.display = 'none';
+
+                console.log('Loaded Content:', loadedContent); // Debug: Check the loaded content
+
+                // Create iframe with the complete content
+                const blob = new Blob([loadedContent], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                const iframe = document.createElement('iframe');
+                iframe.src = blobUrl;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.margin = '0';
+                iframe.style.padding = '0';
+
+                document.getElementById('game-container').appendChild(iframe);
+            } catch (error) {
+                document.getElementById('loader').innerHTML = '<div style="color: red;">Error loading game: ' + error.message + '</div>';
+                console.error('Error:', error);
+            }
+        }
+
+        loadGame();
+    </script>
+</body>
+
+</html>
