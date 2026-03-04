@@ -26,8 +26,8 @@ node build.js
 
 - `game-chunks.json` - Regular minified chunks
 - `game-compressed.txt` - Gzipped + base64 (9 KB) ⭐
-- `game-chunks-gzip.json` - Individual gzipped chunks
-- `chunk-X.txt` and `chunk-X-gzip.txt` files
+- `game-chunks-gzip.json` - 5KB chunks of one gzipped+base64 payload
+- `chunk-X-gzip.txt` files
 
 ### 2. Create Self-Contained File
 
@@ -78,7 +78,7 @@ const COMPRESSED_DATA_URL = "./game-compressed.txt";
 
 **Files needed:**
 
-- `game-chunks-gzip.json` (12.28 KB)
+- `game-chunks-gzip.json` (9.11 KB)
 - `blockchain-loader.html` (loader)
 
 **Configuration in blockchain-loader.html:**
@@ -88,7 +88,7 @@ const LOAD_METHOD = "chunks";
 const CHUNKS_JSON_URL = "./game-chunks-gzip.json";
 ```
 
-**Use case:** Splitting across multiple blockchain transactions
+**Use case:** Splitting one compressed payload across multiple blockchain transactions
 
 ### Option 4: Standard Web Hosting
 
@@ -163,6 +163,7 @@ All modern browsers support:
 1. **Minification:** Remove comments, whitespace → 31.6 KB
 2. **Gzip:** Compress with zlib → 6.81 KB (binary)
 3. **Base64:** Encode for text storage → 9.09 KB (string)
+4. **Chunking (optional):** Split base64 payload into 5,000-byte chunks
 
 ### Decompression Process
 
@@ -170,6 +171,8 @@ All modern browsers support:
 2. **Decode:** Convert base64 → binary (Uint8Array)
 3. **Gunzip:** Decompress with fflate → original HTML
 4. **Inject:** Load game into browser
+
+For `LOAD_METHOD = "chunks"`, the loader first combines all chunk strings, then runs steps 2-4 once.
 
 ## 🎯 Recommendation for Blockchain
 
@@ -196,8 +199,8 @@ fighter/
 ├── blockchain-loader-embedded.html     # Template for embedded version
 ├── blockchain-single-file.html         # Self-contained final version
 ├── game-compressed.txt                 # Gzipped game (9.09 KB) ⭐
-├── game-chunks-gzip.json              # Chunked gzipped (12.28 KB)
-└── chunk-X-gzip.txt                   # Individual compressed chunks
+├── game-chunks-gzip.json              # Gzip-first 5KB chunks (9.11 KB)
+└── chunk-X-gzip.txt                   # Chunk parts of base64 gzip payload
 ```
 
 ## 💡 Tips

@@ -111,20 +111,7 @@ chunks.forEach((chunk, i) => {
 });
 
 // ============================================
-// 7. Save individual chunk files with escaping
-// ============================================
-console.log("\n💾 Saving individual chunk files...");
-chunks.forEach((chunk, i) => {
-  const escapedChunk = chunk
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .replace(/'/g, "\\'");
-  fs.writeFileSync(`chunk-${i}.txt`, escapedChunk, "utf-8");
-  console.log(`   ✓ chunk-${i}.txt (${chunk.length} bytes)`);
-});
-
-// ============================================
-// 8. Create game-chunks.json
+// 7. Create game-chunks.json
 // ============================================
 console.log("\n� Creating game-chunks.json...");
 const chunksData = {};
@@ -139,9 +126,9 @@ console.log(
 );
 
 // ============================================
-// 9. Gzip compression for blockchain deployment
+// 8. Blockchain compression (gzip first, then 5KB chunks)
 // ============================================
-console.log("\n🗜️  Creating gzipped chunks for blockchain...");
+console.log("\n🗜️  Creating gzip-first data for blockchain...");
 
 // Gzip the entire optimized content
 const gzippedContent = zlib.gzipSync(Buffer.from(content, "utf-8"));
@@ -162,30 +149,25 @@ console.log(
   `   Compression ratio: ${((1 - gzipSize / optimizedSize) * 100).toFixed(1)}%`,
 );
 
-// Save gzipped content as base64
+// Save full gzip payload as base64 (single-file blockchain option)
 fs.writeFileSync("game-compressed.txt", gzippedBase64, "utf-8");
 console.log(`   ✓ game-compressed.txt saved (base64-encoded gzip)`);
 
-// Create gzipped JSON chunks (for larger blockchain storage)
-console.log("\n   Creating gzipped chunk files...");
+// Create 5KB chunk files/JSON from the single gzipped+base64 payload
+// (important: we do NOT gzip each chunk independently)
+console.log("\n   Creating 5KB chunks from gzip payload...");
 const gzippedChunks = {};
-const gzippedChunkFiles = [];
+const gzipChunkSize = 5000;
+for (let i = 0; i < gzippedBase64.length; i += gzipChunkSize) {
+  const chunkIndex = i / gzipChunkSize;
+  const chunk = gzippedBase64.substring(i, i + gzipChunkSize);
+  gzippedChunks[`chunk-${chunkIndex}`] = chunk;
+  fs.writeFileSync(`chunk-${chunkIndex}-gzip.txt`, chunk, "utf-8");
+  console.log(`     chunk-${chunkIndex}-gzip.txt: ${chunk.length} bytes`);
+}
 
-chunks.forEach((chunk, i) => {
-  const gzipped = zlib.gzipSync(Buffer.from(chunk, "utf-8"));
-  const base64 = gzipped.toString("base64");
-  gzippedChunks[`chunk-${i}`] = base64;
-  fs.writeFileSync(`chunk-${i}-gzip.txt`, base64, "utf-8");
-  gzippedChunkFiles.push({
-    index: i,
-    originalSize: chunk.length,
-    gzippedSize: gzipped.length,
-    base64Size: base64.length,
-  });
-  console.log(
-    `     chunk-${i}-gzip.txt: ${chunk.length}b → ${gzipped.length}b (${((1 - gzipped.length / chunk.length) * 100).toFixed(1)}% reduction)`,
-  );
-});
+const gzippedChunkCount = Object.keys(gzippedChunks).length;
+console.log(`   ✓ Created ${gzippedChunkCount} gzip-first chunks`);
 
 // Save gzipped chunks as JSON
 const gzippedJsonContent = JSON.stringify(gzippedChunks);
@@ -196,7 +178,7 @@ console.log(
 );
 
 // ============================================
-// 10. Summary
+// 9. Summary
 // ============================================
 console.log("\n" + "=".repeat(50));
 console.log("✨ BUILD SUMMARY");
@@ -206,7 +188,7 @@ console.log(
 );
 console.log(`Game chunks (JSON):           ${(jsonSize / 1024).toFixed(1)} KB`);
 console.log(
-  `Individual chunks (7 files):  ${chunks.map((c) => c.length).reduce((a, b) => a + b, 0)} bytes total`,
+  `Chunk source bytes (JSON):     ${chunks.map((c) => c.length).reduce((a, b) => a + b, 0)} bytes total`,
 );
 console.log(
   `Total optimization:           ${((1 - optimizedSize / content.length) * 100).toFixed(1)}% reduction`,
@@ -219,17 +201,16 @@ console.log(
   `Base64 encoded:               ${(base64Size / 1024).toFixed(2)} KB`,
 );
 console.log(
-  `Gzipped chunks (JSON):        ${(gzippedJsonSize / 1024).toFixed(2)} KB`,
+  `Gzip-first chunks (JSON):     ${(gzippedJsonSize / 1024).toFixed(2)} KB`,
 );
 console.log("=".repeat(50));
 
 console.log("\n📤 Deployment options:");
 console.log("   1. Upload game-chunks.json + loader-escaped.html");
-console.log("   2. Upload chunk-0.txt through chunk-6.txt + loader.html");
 console.log(
-  "   3. 🔗 BLOCKCHAIN: Upload game-compressed.txt + blockchain-loader.html",
+  "   2. 🔗 BLOCKCHAIN: Upload game-compressed.txt + blockchain-loader.html",
 );
 console.log(
-  "   4. 🔗 BLOCKCHAIN: Upload game-chunks-gzip.json + blockchain-loader.html",
+  "   3. 🔗 BLOCKCHAIN: Upload game-chunks-gzip.json + blockchain-loader.html",
 );
 console.log("\n✅ All files ready for deployment!\n");

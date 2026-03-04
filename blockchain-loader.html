@@ -131,32 +131,27 @@
                 if (!response.ok) throw new Error('Failed to fetch chunks');
 
                 const chunksData = await response.json();
-                const chunkKeys = Object.keys(chunksData).sort();
+                const chunkKeys = Object.keys(chunksData).sort((a, b) => {
+                    const aIndex = parseInt(a.replace('chunk-', ''), 10);
+                    const bIndex = parseInt(b.replace('chunk-', ''), 10);
+                    return aIndex - bIndex;
+                });
 
-                updateProgress(`Decompressing ${chunkKeys.length} chunks...`);
+                updateProgress(`Combining ${chunkKeys.length} chunks...`);
+                const fullBase64Data = chunkKeys
+                    .map((key) => chunksData[key])
+                    .join('');
 
-                const decompressedChunks = [];
-                for (let i = 0; i < chunkKeys.length; i++) {
-                    const key = chunkKeys[i];
-                    const base64Data = chunksData[key];
-
-                    // Decode base64
-                    const binaryString = atob(base64Data);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let j = 0; j < binaryString.length; j++) {
-                        bytes[j] = binaryString.charCodeAt(j);
-                    }
-
-                    // Decompress
-                    const decompressed = fflate.gunzipSync(bytes);
-                    const text = new TextDecoder().decode(decompressed);
-                    decompressedChunks.push(text);
-
-                    updateProgress(`Decompressed chunk ${i + 1}/${chunkKeys.length}`);
+                updateProgress('Decoding base64...');
+                const binaryString = atob(fullBase64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Combine chunks
-                const gameHTML = decompressedChunks.join('');
+                updateProgress('Decompressing game...');
+                const decompressed = fflate.gunzipSync(bytes);
+                const gameHTML = new TextDecoder().decode(decompressed);
 
                 updateProgress('Launching game...');
 
