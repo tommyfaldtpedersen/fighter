@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const zlib = require("zlib");
 
 console.log("🎮 Verus Blaster Optimizer - All-in-One Build Script\n");
 
@@ -125,7 +126,7 @@ chunks.forEach((chunk, i) => {
 // ============================================
 // 8. Create game-chunks.json
 // ============================================
-console.log("\n📦 Creating game-chunks.json...");
+console.log("\n� Creating game-chunks.json...");
 const chunksData = {};
 chunks.forEach((chunk, i) => {
   chunksData[`chunk-${i}`] = chunk;
@@ -138,7 +139,64 @@ console.log(
 );
 
 // ============================================
-// 9. Summary
+// 9. Gzip compression for blockchain deployment
+// ============================================
+console.log("\n🗜️  Creating gzipped chunks for blockchain...");
+
+// Gzip the entire optimized content
+const gzippedContent = zlib.gzipSync(Buffer.from(content, "utf-8"));
+const gzippedBase64 = gzippedContent.toString("base64");
+const gzipSize = gzippedContent.length;
+const base64Size = gzippedBase64.length;
+
+console.log(
+  `   Original size:     ${optimizedSize} bytes (${(optimizedSize / 1024).toFixed(2)} KB)`,
+);
+console.log(
+  `   Gzipped size:      ${gzipSize} bytes (${(gzipSize / 1024).toFixed(2)} KB)`,
+);
+console.log(
+  `   Base64 size:       ${base64Size} bytes (${(base64Size / 1024).toFixed(2)} KB)`,
+);
+console.log(
+  `   Compression ratio: ${((1 - gzipSize / optimizedSize) * 100).toFixed(1)}%`,
+);
+
+// Save gzipped content as base64
+fs.writeFileSync("game-compressed.txt", gzippedBase64, "utf-8");
+console.log(`   ✓ game-compressed.txt saved (base64-encoded gzip)`);
+
+// Create gzipped JSON chunks (for larger blockchain storage)
+console.log("\n   Creating gzipped chunk files...");
+const gzippedChunks = {};
+const gzippedChunkFiles = [];
+
+chunks.forEach((chunk, i) => {
+  const gzipped = zlib.gzipSync(Buffer.from(chunk, "utf-8"));
+  const base64 = gzipped.toString("base64");
+  gzippedChunks[`chunk-${i}`] = base64;
+  fs.writeFileSync(`chunk-${i}-gzip.txt`, base64, "utf-8");
+  gzippedChunkFiles.push({
+    index: i,
+    originalSize: chunk.length,
+    gzippedSize: gzipped.length,
+    base64Size: base64.length,
+  });
+  console.log(
+    `     chunk-${i}-gzip.txt: ${chunk.length}b → ${gzipped.length}b (${((1 - gzipped.length / chunk.length) * 100).toFixed(1)}% reduction)`,
+  );
+});
+
+// Save gzipped chunks as JSON
+const gzippedJsonContent = JSON.stringify(gzippedChunks);
+fs.writeFileSync("game-chunks-gzip.json", gzippedJsonContent, "utf-8");
+const gzippedJsonSize = fs.statSync("game-chunks-gzip.json").size;
+console.log(
+  `\n   ✓ game-chunks-gzip.json created (${(gzippedJsonSize / 1024).toFixed(2)} KB)`,
+);
+
+// ============================================
+// 10. Summary
 // ============================================
 console.log("\n" + "=".repeat(50));
 console.log("✨ BUILD SUMMARY");
@@ -153,9 +211,25 @@ console.log(
 console.log(
   `Total optimization:           ${((1 - optimizedSize / content.length) * 100).toFixed(1)}% reduction`,
 );
+console.log("\n" + "🗜️  BLOCKCHAIN COMPRESSION".padEnd(50, " "));
+console.log(
+  `Gzipped (single file):        ${(gzipSize / 1024).toFixed(2)} KB (${((1 - gzipSize / optimizedSize) * 100).toFixed(1)}% smaller)`,
+);
+console.log(
+  `Base64 encoded:               ${(base64Size / 1024).toFixed(2)} KB`,
+);
+console.log(
+  `Gzipped chunks (JSON):        ${(gzippedJsonSize / 1024).toFixed(2)} KB`,
+);
 console.log("=".repeat(50));
 
 console.log("\n📤 Deployment options:");
 console.log("   1. Upload game-chunks.json + loader-escaped.html");
 console.log("   2. Upload chunk-0.txt through chunk-6.txt + loader.html");
+console.log(
+  "   3. 🔗 BLOCKCHAIN: Upload game-compressed.txt + blockchain-loader.html",
+);
+console.log(
+  "   4. 🔗 BLOCKCHAIN: Upload game-chunks-gzip.json + blockchain-loader.html",
+);
 console.log("\n✅ All files ready for deployment!\n");

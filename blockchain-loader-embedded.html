@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verus Blaster - Self-Contained</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #222;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        #loader {
+            text-align: center;
+        }
+
+        #progress {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #error {
+            color: #ff6666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader">
+        <h1>🎮 Loading Verus Blaster</h1>
+        <div class="spinner"></div>
+        <div id="progress">Initializing...</div>
+        <div id="error"></div>
+    </div>
+
+    <!-- fflate: Lightweight compression library (~8KB minified) -->
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+
+    <script>
+        // Embedded compressed game data (gzipped + base64)
+        // This is replaced by build-embedded.js script
+        const COMPRESSED_GAME_DATA = "{{COMPRESSED_DATA}}";
+
+        const progress = document.getElementById('progress');
+        const errorDiv = document.getElementById('error');
+
+        function updateProgress(message) {
+            progress.textContent = message;
+            console.log(message);
+        }
+
+        function showError(message) {
+            errorDiv.textContent = '❌ Error: ' + message;
+            console.error(message);
+        }
+
+        async function loadGame() {
+            try {
+                if (COMPRESSED_GAME_DATA === "{{COMPRESSED_DATA}}") {
+                    showError('Game data not embedded. Run build-embedded.js to create the final file.');
+                    return;
+                }
+
+                updateProgress('Decoding base64...');
+
+                // Decode base64 to binary
+                const binaryString = atob(COMPRESSED_GAME_DATA);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                updateProgress('Decompressing game...');
+
+                // Decompress using fflate
+                const decompressed = fflate.gunzipSync(bytes);
+                const gameHTML = new TextDecoder().decode(decompressed);
+
+                updateProgress('Launching game...');
+
+                // Inject the game
+                document.open();
+                document.write(gameHTML);
+                document.close();
+
+            } catch (error) {
+                showError(error.message);
+                console.error('Full error:', error);
+            }
+        }
+
+        // Start loading
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof fflate === 'undefined') {
+                showError('fflate library failed to load. Check your internet connection.');
+                return;
+            }
+
+            loadGame();
+        });
+    </script>
+</body>
+
+</html>

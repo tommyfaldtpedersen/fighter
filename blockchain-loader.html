@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verus Blaster - Blockchain Loader</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #222;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        #loader {
+            text-align: center;
+        }
+
+        #progress {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #error {
+            color: #ff6666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader">
+        <h1>🎮 Loading Verus Blaster</h1>
+        <div class="spinner"></div>
+        <div id="progress">Initializing...</div>
+        <div id="error"></div>
+    </div>
+
+    <!-- fflate: Lightweight compression library (~8KB minified) -->
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+
+    <script>
+        // Configuration: Choose your loading method
+        const LOAD_METHOD = 'single'; // 'single' or 'chunks'
+
+        // For single file deployment (game-compressed.txt)
+        const COMPRESSED_DATA_URL = './game-compressed.txt';
+
+        // For chunked deployment (game-chunks-gzip.json)
+        const CHUNKS_JSON_URL = './game-chunks-gzip.json';
+
+        const progress = document.getElementById('progress');
+        const errorDiv = document.getElementById('error');
+
+        function updateProgress(message) {
+            progress.textContent = message;
+            console.log(message);
+        }
+
+        function showError(message) {
+            errorDiv.textContent = '❌ Error: ' + message;
+            console.error(message);
+        }
+
+        async function loadAndDecompressSingle() {
+            try {
+                updateProgress('Fetching compressed game data...');
+                const response = await fetch(COMPRESSED_DATA_URL);
+                if (!response.ok) throw new Error('Failed to fetch compressed data');
+
+                const base64Data = await response.text();
+                updateProgress('Decoding base64...');
+
+                // Decode base64 to binary
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                updateProgress('Decompressing game...');
+
+                // Decompress using fflate
+                const decompressed = fflate.gunzipSync(bytes);
+                const gameHTML = new TextDecoder().decode(decompressed);
+
+                updateProgress('Launching game...');
+
+                // Inject the game
+                document.open();
+                document.write(gameHTML);
+                document.close();
+
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function loadAndDecompressChunks() {
+            try {
+                updateProgress('Fetching compressed chunks...');
+                const response = await fetch(CHUNKS_JSON_URL);
+                if (!response.ok) throw new Error('Failed to fetch chunks');
+
+                const chunksData = await response.json();
+                const chunkKeys = Object.keys(chunksData).sort();
+
+                updateProgress(`Decompressing ${chunkKeys.length} chunks...`);
+
+                const decompressedChunks = [];
+                for (let i = 0; i < chunkKeys.length; i++) {
+                    const key = chunkKeys[i];
+                    const base64Data = chunksData[key];
+
+                    // Decode base64
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let j = 0; j < binaryString.length; j++) {
+                        bytes[j] = binaryString.charCodeAt(j);
+                    }
+
+                    // Decompress
+                    const decompressed = fflate.gunzipSync(bytes);
+                    const text = new TextDecoder().decode(decompressed);
+                    decompressedChunks.push(text);
+
+                    updateProgress(`Decompressed chunk ${i + 1}/${chunkKeys.length}`);
+                }
+
+                // Combine chunks
+                const gameHTML = decompressedChunks.join('');
+
+                updateProgress('Launching game...');
+
+                // Inject the game
+                document.open();
+                document.write(gameHTML);
+                document.close();
+
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Start loading based on method
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof fflate === 'undefined') {
+                showError('fflate library failed to load. Check your internet connection.');
+                return;
+            }
+
+            if (LOAD_METHOD === 'single') {
+                loadAndDecompressSingle();
+            } else if (LOAD_METHOD === 'chunks') {
+                loadAndDecompressChunks();
+            } else {
+                showError('Invalid LOAD_METHOD configuration');
+            }
+        });
+    </script>
+</body>
+
+</html>
