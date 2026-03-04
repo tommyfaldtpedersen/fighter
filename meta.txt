@@ -4,6 +4,8 @@ i6XDsAuoBfTJcKENc55eXG3Zaqxyzkb2my
 run getvdxfid "Verus Blaster.vrsctest::html.metadata.info"
 iPQiLEvEyfnLgNfH9QyxyMSewkMhipLzWJ
 
+-----
+
 run updateidentity '{"name":"Verus Blaster@", "contentmultimap":{ "i6XDsAuoBfTJcKENc55eXG3Zaqxyzkb2my": [{
         "i4GC1YGEVD21afWudGoFJVdnfjJ5XWnCQv":{
                "version": 1,
@@ -15,3 +17,6 @@ run updateidentity '{"name":"Verus Blaster@", "contentmultimap":{ "i6XDsAuoBfTJc
             }
         }]
 }}'
+
+------
+
