@@ -14,6 +14,7 @@ let content = fs.readFileSync("index.html", "utf-8");
 console.log(
   `   Original size: ${content.length} bytes (${(content.length / 1024).toFixed(1)} KB)`,
 );
+const originalSize = content.length;
 
 // ============================================
 // 2. Remove comments
@@ -86,47 +87,36 @@ console.log(
 );
 
 // ============================================
-// 5. Escape quotes for text storage
+// 5. Create 5KB chunks
 // ============================================
-console.log("\n🔐 Escaping quotes...");
-let escapedContent = content
-  .replace(/\\/g, "\\\\") // Escape backslashes first
-  .replace(/"/g, '\\"') // Escape double quotes
-  .replace(/'/g, "\\'"); // Escape single quotes
-const escapedSize = escapedContent.length;
-console.log(`   ✓ Quotes escaped (size: ${escapedSize} bytes)`);
+// console.log("\n✂️  Creating 5KB chunks...");
+// const chunkSize = 5000;
+// const chunks = [];
+// for (let i = 0; i < optimizedSize; i += chunkSize) {
+//   chunks.push(content.substring(i, i + chunkSize));
+// }
+// console.log(`   ✓ Created ${chunks.length} chunks`);
+// chunks.forEach((chunk, i) => {
+//   console.log(`     chunk-${i}: ${chunk.length} bytes`);
+// });
 
 // ============================================
-// 6. Create 5KB chunks
+// 6. Create game-chunks.json
 // ============================================
-console.log("\n✂️  Creating 5KB chunks...");
-const chunkSize = 5000;
-const chunks = [];
-for (let i = 0; i < optimizedSize; i += chunkSize) {
-  chunks.push(content.substring(i, i + chunkSize));
-}
-console.log(`   ✓ Created ${chunks.length} chunks`);
-chunks.forEach((chunk, i) => {
-  console.log(`     chunk-${i}: ${chunk.length} bytes`);
-});
+// console.log("\n� Creating game-chunks.json...");
+// const chunksData = {};
+// chunks.forEach((chunk, i) => {
+//   chunksData[`chunk-${i}`] = chunk;
+// });
+// const jsonContent = JSON.stringify(chunksData);
+// fs.writeFileSync("game-chunks.json", jsonContent, "utf-8");
+// const jsonSize = fs.statSync("game-chunks.json").size;
+// console.log(
+//   `   ✓ game-chunks.json created (${(jsonSize / 1024).toFixed(1)} KB)`,
+// );
 
 // ============================================
-// 7. Create game-chunks.json
-// ============================================
-console.log("\n� Creating game-chunks.json...");
-const chunksData = {};
-chunks.forEach((chunk, i) => {
-  chunksData[`chunk-${i}`] = chunk;
-});
-const jsonContent = JSON.stringify(chunksData);
-fs.writeFileSync("game-chunks.json", jsonContent, "utf-8");
-const jsonSize = fs.statSync("game-chunks.json").size;
-console.log(
-  `   ✓ game-chunks.json created (${(jsonSize / 1024).toFixed(1)} KB)`,
-);
-
-// ============================================
-// 8. Blockchain compression (gzip first, then 5KB chunks)
+// 7. Blockchain compression (gzip first, then 5KB chunks)
 // ============================================
 console.log("\n🗜️  Creating gzip-first data for blockchain...");
 
@@ -178,20 +168,20 @@ console.log(
 );
 
 // ============================================
-// 9. Summary
+// 8. Summary
 // ============================================
 console.log("\n" + "=".repeat(50));
 console.log("✨ BUILD SUMMARY");
 console.log("=".repeat(50));
 console.log(
-  `Original (index.html):        ${(content.length / 1024).toFixed(1)} KB`,
+  `Original (index.html):        ${(originalSize / 1024).toFixed(1)} KB`,
 );
-console.log(`Game chunks (JSON):           ${(jsonSize / 1024).toFixed(1)} KB`);
+// console.log(`Game chunks (JSON):           ${(jsonSize / 1024).toFixed(1)} KB`);
+// console.log(
+//   `Chunk source bytes (JSON):     ${chunks.map((c) => c.length).reduce((a, b) => a + b, 0)} bytes total`,
+// );
 console.log(
-  `Chunk source bytes (JSON):     ${chunks.map((c) => c.length).reduce((a, b) => a + b, 0)} bytes total`,
-);
-console.log(
-  `Total optimization:           ${((1 - optimizedSize / content.length) * 100).toFixed(1)}% reduction`,
+  `Total optimization:           ${((1 - optimizedSize / originalSize) * 100).toFixed(1)}% reduction`,
 );
 console.log("\n" + "🗜️  BLOCKCHAIN COMPRESSION".padEnd(50, " "));
 console.log(
