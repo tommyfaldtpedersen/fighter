@@ -1,0 +1,20 @@
+run getvdxfid "Verus Blaster.vrsc::html.metadata"
+i59bacKHRuDrvPR8ybtrMirMYe9a9NW9EX
+
+run getvdxfid "Verus Blaster.vrsc::html.metadata.info"
+i8izwag5giXnVjTtpEt7KqTVWtRwGy6p2V
+
+run updateidentity '{"name":"Verus Blaster@", "contentmultimap":{ "i59bacKHRuDrvPR8ybtrMirMYe9a9NW9EX": [{
+        "i4GC1YGEVD21afWudGoFJVdnfjJ5XWnCQv":{
+               "version": 1,
+               "label":"i8izwag5giXnVjTtpEt7KqTVWtRwGy6p2V",
+               "mimetype":"text/plain",
+               "objectdata":{
+                  "message":"{\"author\":\"Tommy Faldt Pedersen\",\"mimetype\":\"html\",\"version\":1,\"title\":\"Verus Blaster\",\"description\":\"An Onchain HTML5 Arcade Game Running on the Verus Protocol\", \"parts\":2}"
+               }
+            }
+        }]
+}}'
+
+------
+
